@@ -1,2 +1,2 @@
 # BabySense
-BabySense, akıllı bir bebek beşiği projesidir. Bebeklerin durumunu izlemek ve beşiği uzaktan kontrol etmek için tasarlanmıştır. Sensörler ve akıllı bir mobil uygulama ile entegre edilmiş bir multidisipliner projedir..
+"BabySense, ailelerin bebeklerini daha yakından takip etmelerini ve beşiği uzaktan kontrol etmelerini sağlayan bir akıllı bebek beşiği projesidir. Canlı video izleme, ses izleme, sıcaklık ve nem izleme, hareket izleme ve daha fazlasıyla donatılmıştır. Aynı zamanda bebeklerin uyku konforunu artırmak için otomatik sallama ve müzik çalma özellikleri sunar. Bu GitHub reposu, projenin donanım ve yazılım bileşenlerini içerir."
