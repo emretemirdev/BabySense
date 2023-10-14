@@ -1,1 +1,1 @@
-[Sensörden Veri İletişimi-COŞKUN TAŞDEMİR]([https://www.google.com](https://www.youtube.com/playlist?list=PLmkV2uU8kdpIvFZhuZjFI4hEHXdvxzTDw)https://www.youtube.com/playlist?list=PLmkV2uU8kdpIvFZhuZjFI4hEHXdvxzTDw)
+[YouTube Çalma Listesi](https://www.youtube.com/playlist?list=PLmkV2uU8kdpIvFZhuZjFI4hEHXdvxzTDw)
