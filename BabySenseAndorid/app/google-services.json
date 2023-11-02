@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "297246080372",
+    "project_id": "baby-1b398",
+    "storage_bucket": "baby-1b398.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297246080372:android:9c148be93467d006158021",
+        "android_client_info": {
+          "package_name": "com.emretemir.babysenseandorid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUe-rAdhEqSuagix5l-tm0TxCilBgr0pM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
