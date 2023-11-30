@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-11-30T19:49:01.676Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" etag="6zxGlpON1e5rZKsbBFOf" version="22.1.5" type="github">
+<mxfile host="app.diagrams.net" modified="2023-11-30T19:49:28.640Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" etag="3P2OsbkwRfeWkMVOPD1n" version="22.1.5" type="github">
   <diagram name="Sayfa -1" id="EW8aALVjzMRXqYSltjbN">
     <mxGraphModel dx="2509" dy="1292" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -135,6 +135,24 @@
         </mxCell>
         <mxCell id="Aj_nMGEXRJy1hFJAx_PB-55" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3333FF;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" edge="1" parent="Aj_nMGEXRJy1hFJAx_PB-67" source="Aj_nMGEXRJy1hFJAx_PB-6" target="Aj_nMGEXRJy1hFJAx_PB-54">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Aj_nMGEXRJy1hFJAx_PB-79" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Aj_nMGEXRJy1hFJAx_PB-72" target="Aj_nMGEXRJy1hFJAx_PB-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Aj_nMGEXRJy1hFJAx_PB-72" value="" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#434445;aspect=fixed;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.vvd.wi_fi;" vertex="1" parent="1">
+          <mxGeometry x="940" y="340" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="Aj_nMGEXRJy1hFJAx_PB-77" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Aj_nMGEXRJy1hFJAx_PB-2" target="Aj_nMGEXRJy1hFJAx_PB-72">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="810" y="540" as="sourcePoint" />
+            <mxPoint x="860" y="490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Aj_nMGEXRJy1hFJAx_PB-78" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=-0.004;entryY=0.71;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="Aj_nMGEXRJy1hFJAx_PB-72" target="Aj_nMGEXRJy1hFJAx_PB-13">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="990" y="375" as="sourcePoint" />
+            <mxPoint x="1095" y="375" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
