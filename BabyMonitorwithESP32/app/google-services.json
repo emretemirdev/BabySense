@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "590952987871",
+    "project_id": "babymonitorwithesp32",
+    "storage_bucket": "babymonitorwithesp32.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:590952987871:android:093f91adc2dbfc05e57d6a",
+        "android_client_info": {
+          "package_name": "com.emretemir.babymonitorwithesp32"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC1tdIUc93KMK5igXftqZFQnZLoZgJwKM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
