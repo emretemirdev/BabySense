@@ -8,12 +8,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.TweenSpec
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -27,8 +24,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -82,50 +77,6 @@ class MainActivity : ComponentActivity() {
             } else {
                 AuthOrMainScreen(auth)
             }
-        }
-    }
-
-    // Splash Screen UI ve animasyonları
-    @Composable
-    fun SplashScreen(navigateToAuthOrMainScreen: () -> Unit) {
-        // Resmin dönüş efekti için kullanılan değişken
-        var rotationState by remember { mutableStateOf(0f) }
-
-        // Auth veya Main ekranına geçiş için simulasyon
-        LaunchedEffect(true) {
-            delay(2000) // 2 saniye bekletiyoruz
-            navigateToAuthOrMainScreen()
-        }
-
-        // Döndürme efekti animasyonu
-        LaunchedEffect(rotationState) {
-            while (true) {
-                delay(16) // Dönme hızını kontrol etmek için gecikme ayarlayabilirsiniz
-                rotationState += 1f
-            }
-        }
-
-        // Splash Screen'in UI'su ve efektleri
-        val scale by animateFloatAsState(
-            targetValue = 1f,
-            animationSpec = TweenSpec(durationMillis = 500), label = ""
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo), // Logo resmini kullanıyoruz
-                contentDescription = null,
-                modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape)
-                    .scale(scale)
-                    .rotate(rotationState) // Döndürme efektini uyguluyoruz
-            )
         }
     }
 
@@ -323,6 +274,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+
                     // Tıklanabilir Metin
                     Box(
                         modifier = Modifier
@@ -349,6 +301,30 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun resetPassword(auth: FirebaseAuth, email: String) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Parola sıfırlama e-postası başarıyla gönderildi
+                    // Kullanıcıyı bilgilendirin veya bir mesaj gösterin
+                    println("Parola sıfırlama e-postası gönderildi. E-posta adresinizi kontrol edin.")
+
+                    // Şifre sıfırlama işlemi başarılı olduğunda kullanıcıyı giriş ekranına yönlendirebilirsiniz
+                    // Örneğin, aşağıdaki gibi yapabilirsiniz:
+                    // navController.navigate(Screen.Login.route)
+
+                } else {
+                    // Parola sıfırlama işlemi başarısız oldu
+                    // Hata durumunu işleyin veya kullanıcıyı bilgilendirin
+                    val exception = task.exception
+                    if (exception != null) {
+                        val errorMessage = exception.localizedMessage
+                        println("Parola sıfırlama başarısız: $errorMessage")
+                    }
+                }
+            }
     }
 
     // Giriş hatası durumunu işleyen fonksiyon
@@ -429,8 +405,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
     }
-
-
     private fun signUp(
         auth: FirebaseAuth,
         email: String,
@@ -468,7 +442,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
     }
-
 
     @Preview(showBackground = true)
     @Composable

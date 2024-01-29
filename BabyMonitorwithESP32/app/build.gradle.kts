@@ -51,6 +51,7 @@ android {
 }
 
 dependencies {
+    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha10")
 
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
@@ -61,6 +62,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation ("androidx.compose.foundation:foundation:<compose_version>")
+    implementation ("androidx.compose.ui:ui:1.0.0") // Compose UI
+    implementation ("androidx.compose.material:material:1.0.0") // Compose Material Design
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.0.0") // Preview
 
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("com.google.firebase:firebase-firestore:24.10.1")
