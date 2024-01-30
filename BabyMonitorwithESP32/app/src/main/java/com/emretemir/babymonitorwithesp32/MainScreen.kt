@@ -1,5 +1,6 @@
 package com.emretemir.babymonitorwithesp32
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material3.Scaffold
 
@@ -14,6 +15,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,28 +70,33 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 .fillMaxSize()
         ) {
             composable("home") {
-                HomeScreen {
+                HomeScreen (user){
                     onSignOut()
                 }
             }
             composable("profile") {
-                ProfileScreen()
+                ProfileScreen(user)
             }
         }
     }
 }
 
 @Composable
-fun ProfileScreen() {
- //hoşgeldin ekranı
+fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
+    Column {
+        Text(text = "Hoşgeldin, ${user.displayName ?: user.email}")
+        // Diğer içerikler...
 
-    Text(text = "Hoşgeldin")
-
+        Button(
+            onClick = { onSignOut() },
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text("Çıkış Yap")
+        }
+    }
 }
-
 @Composable
-fun HomeScreen(content: @Composable () -> Unit) {
-    content()
-    Text(text = "Ana Ekran")
-
+fun ProfileScreen(user: FirebaseUser) {
+    Text(text = "Profil: ${user.displayName ?: user.email}")
+    // Diğer içerikleriniz...
 }
