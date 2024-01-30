@@ -1,72 +1,95 @@
 package com.emretemir.babymonitorwithesp32
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material3.Scaffold
+
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseUser
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
-    val userProfile = remember { mutableStateOf<User?>(null) }
+    val navController = rememberNavController()
 
-    // Firestore'dan kullanıcı profilini al
-    LaunchedEffect(user.uid) {
-        val firestore = FirebaseFirestore.getInstance()
-        val userDocRef = firestore.collection("users").document(user.uid)
+    Scaffold(
+        bottomBar = {
+            BottomNavigation(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = MaterialTheme.colorScheme.background,
+            ) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
 
-        userDocRef.get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val firstName = document.getString("firstName")
-                    val lastName = document.getString("lastName")
+                BottomNavigationItem(
+                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = null) },
+                    label = { Text(text = "Ana Ekran", modifier = Modifier.padding(4.dp)) },
+                    selected = currentRoute == "home",
+                    onClick = {
+                        navController.navigate("home")
+                    }
+                )
 
-                    userProfile.value = User(firstName, lastName, user.email ?: "")
-                } else {
-                    // Belge mevcut değilse işleme geç
+                BottomNavigationItem(
+                    icon = { Icon(imageVector = Icons.Default.Person, contentDescription = null) },
+                    label = { Text(text = "Profil", modifier = Modifier.padding(4.dp)) },
+                    selected = currentRoute == "profile",
+                    onClick = {
+                        navController.navigate("profile")
+                    }
+                )
+            }
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
+            composable("home") {
+                HomeScreen {
+                    onSignOut()
                 }
             }
-            .addOnFailureListener { e ->
-                // Hata durumunu işleyin
-
+            composable("profile") {
+                ProfileScreen()
             }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        userProfile.value?.let {
-            Text("Hoş geldiniz, ${it.firstName} ${it.lastName}!")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                onSignOut()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Çıkış Yap")
         }
     }
+}
+
+@Composable
+fun ProfileScreen() {
+ //hoşgeldin ekranı
+
+    Text(text = "Hoşgeldin")
+
+}
+
+@Composable
+fun HomeScreen(content: @Composable () -> Unit) {
+    content()
+    Text(text = "Ana Ekran")
+
 }
