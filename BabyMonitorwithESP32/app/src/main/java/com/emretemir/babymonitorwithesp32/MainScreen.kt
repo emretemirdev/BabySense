@@ -1,64 +1,73 @@
 package com.emretemir.babymonitorwithesp32
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.BottomNavigation
 import androidx.compose.material3.Scaffold
-
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseUser
-
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
     val navController = rememberNavController()
 
+    // Kullanıcı profil bilgilerini saklamak için bir state
+    val userProfile = remember { mutableStateOf<User?>(null) }
+
+    // Firestore'dan kullanıcı profilini çek
+    LaunchedEffect(key1 = user) {
+        val firestore = FirebaseFirestore.getInstance()
+        val userDocRef = firestore.collection("users").document(user.uid)
+
+        userDocRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val firstName = document.getString("firstName") ?: ""
+                val lastName = document.getString("lastName") ?: ""
+                userProfile.value = User(firstName, lastName, user.email ?: "")
+            }
+        }
+    }
+
+
     Scaffold(
         bottomBar = {
             BottomNavigation(
                 modifier = Modifier.fillMaxWidth(),
-                backgroundColor = MaterialTheme.colorScheme.background,
+                backgroundColor = MaterialTheme.colorScheme.background
             ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
+                val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
                 BottomNavigationItem(
-                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = null) },
-                    label = { Text(text = "Ana Ekran", modifier = Modifier.padding(4.dp)) },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Ana Ekran") },
+                    label = { Text("Ana Ekran") },
                     selected = currentRoute == "home",
-                    onClick = {
-                        navController.navigate("home")
-                    }
+                    onClick = { navController.navigate("home") }
                 )
-
                 BottomNavigationItem(
-                    icon = { Icon(imageVector = Icons.Default.Person, contentDescription = null) },
-                    label = { Text(text = "Profil", modifier = Modifier.padding(4.dp)) },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Profil") },
+                    label = { Text("Profil") },
                     selected = currentRoute == "profile",
-                    onClick = {
-                        navController.navigate("profile")
-                    }
+                    onClick = { navController.navigate("profile") }
                 )
+                // Diğer bottom navigation item'ları ekleyin...
             }
         }
     ) { paddingValues ->
@@ -70,33 +79,14 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 .fillMaxSize()
         ) {
             composable("home") {
-                HomeScreen (user){
+                HomeScreen(userProfile.value) {
                     onSignOut()
                 }
             }
             composable("profile") {
-                ProfileScreen(user)
+                ProfileScreen(userProfile.value)
             }
         }
     }
 }
 
-@Composable
-fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
-    Column {
-        Text(text = "Hoşgeldin, ${user.displayName ?: user.email}")
-        // Diğer içerikler...
-
-        Button(
-            onClick = { onSignOut() },
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Çıkış Yap")
-        }
-    }
-}
-@Composable
-fun ProfileScreen(user: FirebaseUser) {
-    Text(text = "Profil: ${user.displayName ?: user.email}")
-    // Diğer içerikleriniz...
-}
