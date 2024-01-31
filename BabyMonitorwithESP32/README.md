@@ -7,7 +7,7 @@
 ## Hata İşleme
 
 - [ ] Daha ayrıntılı hata mesajları ile kullanıcı geri bildirimi.
-- [ ] İnternet bağlantısı kontrolü ve ilgili hata mesajlarının gösterilmesi.
+- [X] İnternet bağlantısı kontrolü ve ilgili hata mesajlarının gösterilmesi.
 
 ## Güvenlik Önlemleri
 
