@@ -1,11 +1,21 @@
 package com.emretemir.babymonitorwithesp32
 
 
+import android.content.Context
+import android.net.ConnectivityManager
 import androidx.compose.runtime.*
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -23,19 +33,42 @@ class MainActivity : ComponentActivity() {
 
             AppContent(auth)
         }
-    }
 
-    // Uygulama içeriği başladığında görüntülenecek olan Splash Screen
+    }
     @Composable
     fun AppContent(auth: FirebaseAuth) {
         var showSplashScreen by remember { mutableStateOf(true) }
+        var showRetryDialog by remember { mutableStateOf(false) }
+        var isCheckingConnection by remember { mutableStateOf(false) }
 
-        LaunchedEffect(showSplashScreen) {
-            delay(2000) // 2 saniye bekleyerek Splash Screen'i gösteriyoruz
+        LaunchedEffect(key1 = showSplashScreen) {
+            delay(2000)
+            if (!isNetworkAvailable()) {
+                showRetryDialog = true
+            }
             showSplashScreen = false
         }
 
-        Crossfade(targetState = showSplashScreen, label = "") { isSplashScreenVisible ->
+        if (showRetryDialog && !isCheckingConnection) {
+            RetryDialog(onRetry = {
+                isCheckingConnection = true
+            })
+        }
+
+        if (isCheckingConnection) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator()
+            }
+
+            LaunchedEffect(key1 = Unit) {
+                if (isNetworkAvailable()) {
+                    showRetryDialog = false
+                }
+                isCheckingConnection = false
+            }
+        }
+
+        Crossfade(targetState = showSplashScreen) { isSplashScreenVisible ->
             if (isSplashScreenVisible) {
                 SplashScreen {
                     showSplashScreen = false
@@ -44,6 +77,28 @@ class MainActivity : ComponentActivity() {
                 AuthOrMainScreen(auth)
             }
         }
+    }
+
+    // İnternet bağlantısını kontrol eden fonksiyon
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetworkInfo
+        return activeNetwork != null && activeNetwork.isConnected
+    }
+
+    // "Tekrar Dene" diyalogunu gösteren Composable fonksiyon
+    @Composable
+    fun RetryDialog(onRetry: () -> Unit) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("İnternet Bağlantısı Yok") },
+            text = { Text("Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.") },
+            confirmButton = {
+                Button(onClick = onRetry) {
+                    Text("Tekrar Dene")
+                }
+            }
+        )
     }
 
     // Giriş ekranı veya ana ekranı gösteren ana Composable fonksiyon
