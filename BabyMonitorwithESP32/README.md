@@ -11,7 +11,7 @@
 
 ## Güvenlik Önlemleri
 
-- [ ] Giriş denemelerinin sınırlanması ve çok sayıda başarısız girişten sonra hesabın kilitleme işlemi.
+- [X] Giriş denemelerinin sınırlanması ve çok sayıda başarısız girişten sonra hesabın kilitleme işlemi.
 - [ ] Güçlü şifre politikalarının uygulanması ve kullanıcıya şifre güvenliği hakkında bilgilendirme.
 
 ## Kullanıcı Deneyimi İyileştirmeleri
