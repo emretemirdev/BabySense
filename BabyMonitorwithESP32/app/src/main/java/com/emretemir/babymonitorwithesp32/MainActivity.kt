@@ -21,16 +21,19 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
-
+import com.google.firebase.messaging.FirebaseMessaging;
 
 class MainActivity : ComponentActivity() {
     private val auth: FirebaseAuth by lazy { Firebase.auth }
+    private lateinit var permissionsManager: PermissionsManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseMessaging.getInstance().subscribeToTopic("new_user_forms")
 
+        permissionsManager = PermissionsManager(this)
+        permissionsManager.setupPermissions()
         setContent {
-
             AppContent(auth)
         }
 
