@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +53,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
+var signInAttempts = 0
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,18 +66,12 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
     var isLoading by remember { mutableStateOf(false) }
     var isSignIn by remember { mutableStateOf(true) }
     var isPasswordVisible by remember { mutableStateOf(false) }
-    // Hata mesajları için state değişkenleri
     var myErrorMessage by remember { mutableStateOf<String?>(null) }
-    // Eksik bilgi uyarısı için state değişkeni
     var missingInfoMessage by remember { mutableStateOf<String?>(null) }
-    // Arka plan resmini yüklüyoruz (kendi resminizi eklemelisiniz)
     val imagePainter: Painter = painterResource(id = R.drawable.back_img)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        // Arka plan resmi
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = imagePainter,
             contentDescription = null,
@@ -83,7 +79,6 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Yuvarlatılmış köşelere sahip, transparan bir kart oluşturuyoruz
         Card(
             modifier = Modifier
                 .fillMaxSize()
@@ -99,141 +94,115 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // İlk Ad TextField'i (kaydolma ekranında görünür)
                 if (!isSignIn) {
                     Spacer(modifier = Modifier.height(8.dp))
-
                     TextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        label = {
-                            Text("Ad")
-                        },
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        label = { Text("Ad") }
                     )
-
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    // Soyad TextField'i (kaydolma ekranında görünür)
                     TextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        label = {
-                            Text("Soyad")
-                        },
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        label = { Text("Soyad") }
                     )
                 }
 
-                // Email TextField'i
                 Spacer(modifier = Modifier.height(16.dp))
                 TextField(
                     value = email,
                     onValueChange = { email = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    label = {
-                        Text("Email")
-                    },
-                    leadingIcon = {
-                        Icon(Icons.Default.Email, contentDescription = null)
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Email
-                    ),
-                    visualTransformation = if (isSignIn) VisualTransformation.None else VisualTransformation.None
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    label = { Text("Email") },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                    visualTransformation = VisualTransformation.None
                 )
 
-                // Şifre TextField'i
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
                     value = password,
                     onValueChange = { password = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    label = {
-                        Text("Şifre")
-                    },
-                    leadingIcon = {
-                        Icon(Icons.Default.Lock, contentDescription = null)
-                    },
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    label = { Text("Şifre") },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Password
-                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
                     trailingIcon = {
-                        IconButton(
-                            onClick = { isPasswordVisible = !isPasswordVisible }
-                        ) {
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                             val icon = if (isPasswordVisible) Icons.Default.Lock else Icons.Default.Search
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = "Şifre Görünürlüğünü Değiştir"
-                            )
+                            Icon(imageVector = icon, contentDescription = "Şifre Görünürlüğünü Değiştir")
                         }
                     }
                 )
 
-                // ... (diğer içerikler)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Hata Mesajı
                 if (myErrorMessage != null) {
                     Text(
                         text = myErrorMessage!!,
                         color = Color.Blue,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = {
-                        if (isSignIn) {
+                if (isLoading) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Button(
+                        onClick = {
                             if (email.isEmpty() || password.isEmpty()) {
                                 missingInfoMessage = "Lütfen E-posta ve Şifrenizi Girin."
                             } else {
-                                signIn(auth, email, password,
-                                    onSignedIn = { signedInUser ->
-                                        onSignedIn(signedInUser)
-                                    },
-                                    onSignInError = { errorMessage ->
-                                        // Giriş hatası durumunda hata mesajını göster
-                                        myErrorMessage = errorMessage
+                                isLoading = true
+                                if (isSignIn) {
+                                    signIn(
+                                        auth, email, password,
+                                        onSignedIn = { signedInUser ->
+                                            onSignedIn(signedInUser)
+                                            isLoading = false
+                                        },
+                                        onSignInError = { errorMessage ->
+                                            myErrorMessage = errorMessage
+                                            isLoading = false
+                                        }
+                                    )
+                                } else {
+                                    if (firstName.isEmpty() || lastName.isEmpty()) {
+                                        missingInfoMessage = "Lütfen tüm alanları doldurun."
+                                    } else {
+                                        signUp(
+                                            auth, email, password, firstName, lastName,
+                                            onSignedIn = { signedInUser ->
+                                                onSignedIn(signedInUser)
+                                                isLoading = false
+                                            },
+                                            onSignUpError = { errorMessage ->
+                                                myErrorMessage = errorMessage
+                                                isLoading = false
+                                            }
+                                        )
                                     }
-                                )
-                            }
-                        } else {
-                            if (email.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty()) {
-                                missingInfoMessage = "Lütfen tüm alanları doldurun."
-                            } else {
-                                signUp(auth, email, password, firstName, lastName) { signedInUser ->
-                                    onSignedIn(signedInUser)
                                 }
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(8.dp),
-                ) {
-                    Text(
-                        text = if (isSignIn) "Giriş Yap" else "Kaydol",
-                        fontSize = 18.sp,
-                    )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .padding(8.dp),
+                    ) {
+                        Text(
+                            text = if (isSignIn) "Giriş Yap" else "Kaydol",
+                            fontSize = 18.sp,
+                        )
+                    }
                 }
 
-                // Eksik bilgi uyarısını göstermek için Text bileşeni ekleyin
                 missingInfoMessage?.let {
                     Text(
                         text = it,
@@ -244,7 +213,6 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                     )
                 }
 
-                // Tıklanabilir Metin
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -263,30 +231,33 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                             password = ""
                             isSignIn = !isSignIn
                         },
-                        modifier = Modifier
-                            .align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center)
                     )
                 }
             }
         }
     }
 }
-
 private fun signIn(
     auth: FirebaseAuth,
     email: String,
     password: String,
     onSignedIn: (FirebaseUser) -> Unit,
-    onSignInError: (String) -> Unit // Giriş hatası için geri çağrı
+    onSignInError: (String) -> Unit
 ) {
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val user = auth.currentUser
                 onSignedIn(user!!)
+                signInAttempts = 0 // Başarılı girişte sıfırlayın
             } else {
-                // Giriş başarısız olduğunda burası çalışır
-                onSignInError("Geçersiz email veya şifre")
+                signInAttempts++
+                if (signInAttempts >= 3) {
+                    onSignInError("Çok fazla hatalı giriş denemesi. Lütfen bir süre sonra tekrar deneyin.")
+                } else {
+                    onSignInError("Geçersiz email veya şifre")
+                }
             }
         }
 }
@@ -296,7 +267,9 @@ private fun signUp(
     password: String,
     firstName: String,
     lastName: String,
-    onSignedIn: (FirebaseUser) -> Unit
+
+    onSignedIn: (FirebaseUser) -> Unit,
+    onSignUpError: (String) -> Unit // Kayıt hatası için geri çağrı
 ) {
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
@@ -317,13 +290,15 @@ private fun signUp(
                     .addOnSuccessListener {
                         onSignedIn(user)
                     }
-                    .addOnFailureListener {
-                        // Hata durumunu işleyin
-
+                    .addOnFailureListener { e ->
+                        // Kayıt hatası durumunda hata mesajını alın
+                        val errorMessage = e.message ?: "Bir hata meydana geldi"
+                        onSignUpError(errorMessage)
                     }
             } else {
-                // Kayıt başarısız olduysa burası çalışır
-
+                // Kayıt hatası durumunda hata mesajını alın
+                val errorMessage = task.exception?.message ?: "Bir hata meydana geldi"
+                onSignUpError(errorMessage)
             }
         }
 }
