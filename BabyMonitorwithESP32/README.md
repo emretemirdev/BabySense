@@ -27,7 +27,6 @@
 
 - [ ] Ekran okuyucu ve diğer erişilebilirlik araçları için destek eklenmesi.
 
-## Uluslararasılaştırma
 
 - [ ] Çoklu dil desteği eklenmesi.
 
