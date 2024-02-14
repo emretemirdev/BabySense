@@ -72,6 +72,7 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging:23.0.0")
     implementation("com.google.firebase:firebase-storage:20.3.0")
     implementation("com.google.firebase:firebase-functions")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.0.0")
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.onesignal:OneSignal:[5.0.0, 5.99.99]")
     implementation("com.google.firebase:firebase-functions-ktx:20.4.0")
