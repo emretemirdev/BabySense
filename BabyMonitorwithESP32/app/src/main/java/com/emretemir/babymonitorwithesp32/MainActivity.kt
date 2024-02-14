@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import androidx.compose.runtime.*
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
@@ -17,27 +18,43 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
-import com.google.firebase.messaging.FirebaseMessaging;
 
 class MainActivity : ComponentActivity() {
     private val auth: FirebaseAuth by lazy { Firebase.auth }
     private lateinit var permissionsManager: PermissionsManager
+    private lateinit var functions: FirebaseFunctions
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        FirebaseMessaging.getInstance().subscribeToTopic("new_user_forms")
+        super.onCreate(savedInstanceState); //bu kod şu işe yarar: https://stackoverflow.com/questions/60361276/what-does-superoncreatebundlesavedinstancestate-do-in-android
 
         permissionsManager = PermissionsManager(this)
         permissionsManager.setupPermissions()
+        functions = Firebase.functions
+
+        functions.getHttpsCallable("helloWorld").call()
+            .addOnSuccessListener {result ->
+                val data = result.data
+                println(data)
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Bağlantı hatası", Toast.LENGTH_SHORT).show()
+            }
+
+
         setContent {
             AppContent(auth)
         }
 
     }
+
     @Composable
     fun AppContent(auth: FirebaseAuth) {
         var showSplashScreen by remember { mutableStateOf(true) }
