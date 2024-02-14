@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.pm.PackageManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -41,6 +42,13 @@ public class PushNotificationService extends FirebaseMessagingService {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(
+                            this, "Bildirim izni verilmedi, lütfen uygulamanın ayarlarından ilgili izni etkinleştirin.",
+                            Toast.LENGTH_SHORT)
+                    .show();
             return;
         }
         NotificationManagerCompat.from(this).notify(1, notification.build());

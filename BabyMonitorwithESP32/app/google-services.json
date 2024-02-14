@@ -13,7 +13,20 @@
           "package_name": "com.emretemir.babymonitorwithesp32"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "590952987871-ejsmpmter0t84oatn1v1g5kuscsad77p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emretemir.babymonitorwithesp32",
+            "certificate_hash": "31c85ffc60ee6073e670bd003d4a158b0479f64d"
+          }
+        },
+        {
+          "client_id": "590952987871-e0mtbahfpe60j5s03hd13kdkf9mqcg8h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDC1tdIUc93KMK5igXftqZFQnZLoZgJwKM"
@@ -21,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "590952987871-e0mtbahfpe60j5s03hd13kdkf9mqcg8h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
