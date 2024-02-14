@@ -17,17 +17,14 @@
 ## Kullanıcı Deneyimi İyileştirmeleri
 
 - [ ] Giriş ve kayıt işlemleri sırasında ilerleme göstergesi veya yükleme simgesi eklenmesi.
-- [ ] Kayıt sonrası otomatik giriş yapılması.
+- [X] Kayıt sonrası otomatik giriş yapılması.
 
 ## Sosyal Medya Entegrasyonu
 
 - [ ] Google, Facebook, Twitter gibi platformlarla giriş seçeneklerinin eklenmesi.
 
 ## Erişilebilirlik İyileştirmeleri
-
 - [ ] Ekran okuyucu ve diğer erişilebilirlik araçları için destek eklenmesi.
-
-## Uluslararasılaştırma
 
 - [ ] Çoklu dil desteği eklenmesi.
 
