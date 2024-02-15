@@ -1,9 +1,5 @@
 package com.emretemir.babymonitorwithesp32
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -39,7 +35,7 @@ class StartupManager(private val activity: ComponentActivity) {
     private fun subscribeToSensorUpdates() {
         FirebaseMessaging.getInstance().subscribeToTopic("sensorUpdates")
             .addOnCompleteListener { task ->
-                var msg = "Subscription successful"
+                var msg = "Subscription successful LAN"
                 if (!task.isSuccessful) {
                     msg = "Subscription failed"
                 }

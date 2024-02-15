@@ -109,6 +109,7 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(8.dp),
                         label = { Text("Soyad") }
                     )
+
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -302,3 +303,4 @@ private fun signUp(
             }
         }
 }
+

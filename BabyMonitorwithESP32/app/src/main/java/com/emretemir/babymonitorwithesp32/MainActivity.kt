@@ -67,8 +67,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-        Crossfade(targetState = showSplashScreen, label = "SplashScreenCrossfade") { isSplashScreenVisible ->
+        Crossfade(
+            targetState = showSplashScreen,
+            label = "SplashScreenCrossfade" // Lable tanımlamak
+        ) { isSplashScreenVisible ->
             if (isSplashScreenVisible) {
                 SplashScreen {
                     showSplashScreen = false
@@ -77,12 +79,12 @@ class MainActivity : ComponentActivity() {
                 AuthOrMainScreen(auth)
             }
         }
-
     }
 
     // İnternet bağlantısını kontrol eden fonksiyon
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
         val network = connectivityManager.activeNetwork ?: return false
         val actNw = connectivityManager.getNetworkCapabilities(network) ?: return false
         return when {

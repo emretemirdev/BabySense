@@ -86,6 +86,7 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
             composable("profile") {
                 ProfileScreen(userProfile.value)
             }
+
         }
     }
 }

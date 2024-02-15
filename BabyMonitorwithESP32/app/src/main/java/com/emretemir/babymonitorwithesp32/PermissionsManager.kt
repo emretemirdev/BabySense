@@ -3,6 +3,7 @@ package com.emretemir.babymonitorwithesp32
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.ActivityResultLauncher
@@ -16,9 +17,21 @@ class PermissionsManager(private val activity: ComponentActivity) {
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
-                // İzin verildi
+                // İzin verildi (Permission Granted)
+                // Here you can perform actions that require the POST_NOTIFICATIONS permission
+                Log.d("PermissionsManager", "Post notifications permission granted!")
+
+                // Example actions (adjust to your app's specific needs):
+                // - Initialize notification features
+                // - Schedule a notification
             } else {
-                // İzin verilmedi
+                // İzin verilmedi (Permission Denied)
+                Log.d("PermissionsManager", "Post notifications permission denied!")
+
+                // Handle permission denial - common actions include:
+                // - Explain to the user why the permission is important
+                // - Optionally, provide a way to re-request the permission
+                // - Disable features that rely on the permission if necessary
             }
         }
 
