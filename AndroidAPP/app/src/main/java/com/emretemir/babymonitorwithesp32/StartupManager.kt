@@ -19,8 +19,6 @@ class StartupManager(private val activity: ComponentActivity) {
         setupPermissions()
         setupFirebaseFunctions()
         subscribeToSensorUpdates()
-
-
     }
 
     private fun setupPermissions() {
