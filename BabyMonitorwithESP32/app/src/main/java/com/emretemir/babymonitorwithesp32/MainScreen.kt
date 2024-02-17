@@ -67,6 +67,12 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     selected = currentRoute == "profile",
                     onClick = { navController.navigate("profile") }
                 )
+                BottomNavigationItem(
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Canlı") },
+                    label = { Text("Canlı") },
+                    selected = currentRoute == "VideoStreamScreen",
+                    onClick = { navController.navigate("VideoStreamScreen") }
+                )
                 // Diğer bottom navigation item'ları ekleyin...
             }
         }
@@ -85,6 +91,9 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
             }
             composable("profile") {
                 ProfileScreen(userProfile.value)
+            }
+            composable("VideoStreamScreen") {
+                VideoStreamScreen(userProfile.value)
             }
 
         }
