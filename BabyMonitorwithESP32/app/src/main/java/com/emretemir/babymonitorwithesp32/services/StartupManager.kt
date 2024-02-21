@@ -1,4 +1,4 @@
-package com.emretemir.babymonitorwithesp32
+package com.emretemir.babymonitorwithesp32.services
 
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -8,6 +8,7 @@ import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+
 
 class StartupManager(private val activity: ComponentActivity) {
 
@@ -20,6 +21,7 @@ class StartupManager(private val activity: ComponentActivity) {
         setupFirebaseFunctions()
         subscribeToSensorUpdates()
     }
+
 
     private fun setupPermissions() {
         permissionsManager = PermissionsManager(activity)

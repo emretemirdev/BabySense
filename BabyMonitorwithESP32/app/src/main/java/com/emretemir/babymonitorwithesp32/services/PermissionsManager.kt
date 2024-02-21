@@ -1,4 +1,4 @@
-package com.emretemir.babymonitorwithesp32
+package com.emretemir.babymonitorwithesp32.services
 
 import android.Manifest
 import android.content.pm.PackageManager

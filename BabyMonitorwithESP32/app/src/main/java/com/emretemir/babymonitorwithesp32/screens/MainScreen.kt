@@ -1,5 +1,6 @@
-package com.emretemir.babymonitorwithesp32
 
+package com.emretemir.babymonitorwithesp32.screens
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseUser
@@ -11,6 +12,7 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.emretemir.babymonitorwithesp32.User
 import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +71,7 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     onClick = { navController.navigate("profile") }
                 )
                 BottomNavigationItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Canlı") },
+                    icon = { Icon(Icons.Default.Face, contentDescription = "Canlı") },
                     label = { Text("Canlı") },
                     selected = currentRoute == "VideoStreamScreen",
                     onClick = { navController.navigate("VideoStreamScreen") }
@@ -93,7 +96,7 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 ProfileScreen(userProfile.value)
             }
             composable("VideoStreamScreen") {
-                VideoStreamScreen(userProfile.value)
+                VideoStreamScreen()
             }
 
         }

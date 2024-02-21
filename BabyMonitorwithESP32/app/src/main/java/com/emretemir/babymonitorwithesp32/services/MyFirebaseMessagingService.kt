@@ -1,4 +1,4 @@
-package com.emretemir.babymonitorwithesp32
+package com.emretemir.babymonitorwithesp32.services
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

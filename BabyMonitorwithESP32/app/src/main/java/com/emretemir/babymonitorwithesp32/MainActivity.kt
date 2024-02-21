@@ -17,6 +17,10 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.emretemir.babymonitorwithesp32.screens.AuthScreen
+import com.emretemir.babymonitorwithesp32.screens.MainScreen
+import com.emretemir.babymonitorwithesp32.screens.SplashScreen
+import com.emretemir.babymonitorwithesp32.services.StartupManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase

@@ -1,4 +1,5 @@
-package com.emretemir.babymonitorwithesp32
+
+package com.emretemir.babymonitorwithesp32.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.core.TweenSpec
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.emretemir.babymonitorwithesp32.R
 import kotlinx.coroutines.delay
 
 @Composable
