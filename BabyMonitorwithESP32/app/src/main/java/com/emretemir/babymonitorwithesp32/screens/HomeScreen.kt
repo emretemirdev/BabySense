@@ -47,7 +47,7 @@ fun TemperatureCard(temperature: Float) {
             .size(width = 240.dp, height = 100.dp)
     ) {
         Text(
-            text = "Elevated",
+            text = "23.5C",
             modifier = Modifier
                 .padding(16.dp),
             textAlign = TextAlign.Center,

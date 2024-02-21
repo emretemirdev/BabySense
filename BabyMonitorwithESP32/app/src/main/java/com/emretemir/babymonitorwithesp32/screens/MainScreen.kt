@@ -1,10 +1,10 @@
 
 package com.emretemir.babymonitorwithesp32.screens
+import VideoStreamScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseUser
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
@@ -28,11 +28,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.emretemir.babymonitorwithesp32.User
 import com.google.firebase.firestore.FirebaseFirestore
 
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
     val navController = rememberNavController()
-
     // Kullanıcı profil bilgilerini saklamak için bir state
     val userProfile = remember { mutableStateOf<User?>(null) }
 
@@ -79,6 +81,7 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 // Diğer bottom navigation item'ları ekleyin...
             }
         }
+
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -88,15 +91,15 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 .fillMaxSize()
         ) {
             composable("home") {
-                HomeScreen(userProfile.value) {
-                    onSignOut()
-                }
+
+                    HomeScreen(userProfile.value,
+                        onSignOut) // Virgülden sonra
             }
             composable("profile") {
                 ProfileScreen(userProfile.value)
             }
             composable("VideoStreamScreen") {
-                VideoStreamScreen()
+                VideoStreamScreen(userProfile.value)
             }
 
         }
