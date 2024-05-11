@@ -99,7 +99,7 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 ProfileScreen(userProfile.value)
             }
             composable("VideoStreamScreen") {
-                VideoStreamScreen(userProfile.value)
+                VideoStreamScreen()
             }
 
         }
