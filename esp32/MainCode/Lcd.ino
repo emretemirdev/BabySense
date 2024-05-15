@@ -78,81 +78,6 @@ void setup()
   Firebase.reconnectWiFi(true);
 }
 
-void loop() 
-{
-
-  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
-  {
-    sendDataPrevMillis = millis();
-    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
-    {
-       int motorStatus = fbdo.intData();
-         Serial.println(motorStatus);
-      if (motorStatus == 1) 
-      {
-        digitalWrite(motorPinIN1, HIGH);
-        digitalWrite(motorPinIN2, LOW);
-        analogWrite(motorPinEN, 100); // Motoru çalıştır
-        Serial.println("Motor Çalışıyor");
-      } 
-      else 
-      {
-        digitalWrite(motorPinIN1, LOW);
-        digitalWrite(motorPinIN2, LOW);
-        analogWrite(motorPinEN, 0); // Motoru durdur
-        Serial.println("Motor Durdu!!!");
-      }
-    } 
-    else 
-    {
-      Serial.print("Hata: ");
-      Serial.println(fbdo.errorReason());
-    }
-    
-    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) {
-       int fanStatus = fbdo.intData();
-         Serial.println(fanStatus);
-      if (fanStatus == 1) {
-        digitalWrite(fanPinIN1, HIGH);
-        digitalWrite(fanPinIN2, LOW);
-        analogWrite(fanPinEN, 255);
-        Serial.println("Fan Çalışıyor");
-      } else {
-        digitalWrite(fanPinIN1, LOW);
-        digitalWrite(fanPinIN2, LOW);
-        analogWrite(fanPinEN, 0);
-        Serial.println("Fan Durdu!!!");
-      }
-    } else {
-      Serial.print("Hata: ");
-      Serial.println(fbdo.errorReason());
-    }
-  }
-
-
-  if (!digitalRead(downButton))
-  {
-    menu++;
-    updateMenu();
-    delay(100);
-    while (!digitalRead(downButton));
-  }
-  if (!digitalRead(upButton))
-  {
-    menu--;
-    updateMenu();
-    delay(100);
-    while(!digitalRead(upButton));
-  }
-  if (!digitalRead(selectButton))
-  {
-    executeAction();
-    updateMenu();
-    delay(100);
-    while (!digitalRead(selectButton));
-  }
-}
-
 void updateMenu() {
   switch (menu) {
     case 0:
@@ -266,4 +191,85 @@ void action4() {
   lcd.clear();
   lcd.print(">Executing #4");
   delay(1500);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+void loop() 
+{
+
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
+  {
+    sendDataPrevMillis = millis();
+    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
+    {
+       int motorStatus = fbdo.intData();
+         Serial.println(motorStatus);
+      if (motorStatus == 1) 
+      {
+        digitalWrite(motorPinIN1, HIGH);
+        digitalWrite(motorPinIN2, LOW);
+        analogWrite(motorPinEN, 100); // Motoru çalıştır
+        Serial.println("Motor Çalışıyor");
+      } 
+      else 
+      {
+        digitalWrite(motorPinIN1, LOW);
+        digitalWrite(motorPinIN2, LOW);
+        analogWrite(motorPinEN, 0); // Motoru durdur
+        Serial.println("Motor Durdu!!!");
+      }
+    } 
+    else 
+    {
+      Serial.print("Hata: ");
+      Serial.println(fbdo.errorReason());
+    }
+    
+    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) {
+       int fanStatus = fbdo.intData();
+         Serial.println(fanStatus);
+      if (fanStatus == 1) {
+        digitalWrite(fanPinIN1, HIGH);
+        digitalWrite(fanPinIN2, LOW);
+        analogWrite(fanPinEN, 255);
+        Serial.println("Fan Çalışıyor");
+      } else {
+        digitalWrite(fanPinIN1, LOW);
+        digitalWrite(fanPinIN2, LOW);
+        analogWrite(fanPinEN, 0);
+        Serial.println("Fan Durdu!!!");
+      }
+    } else {
+      Serial.print("Hata: ");
+      Serial.println(fbdo.errorReason());
+    }
+  }
+
+/*
+  if (!digitalRead(downButton))
+  {
+    menu++;
+    updateMenu();
+    delay(100);
+    while (!digitalRead(downButton));
+  }
+  if (!digitalRead(upButton))
+  {
+    menu--;
+    updateMenu();
+    delay(100);
+    while(!digitalRead(upButton));
+  }
+  if (!digitalRead(selectButton))
+  {
+    executeAction();
+    updateMenu();
+    delay(100);
+    while (!digitalRead(selectButton));
+  }
+*/
 }
