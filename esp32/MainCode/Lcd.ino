@@ -23,10 +23,13 @@ FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 bool signupOK = false;
  
-int motorPinEN = 14;  // PWM 
-int motorPinIN1 = 26; // Direction pin 1
-int motorPinIN2 = 27; // Direction pin 2
+int fanPinEN = 5;  // PWM 
+int fanPinIN1 = 16; // Direction pin 1
+int fanPinIN2 = 17; // Direction pin 2
 
+int motorPinEN = 25;  // PWM 
+int motorPinIN1 = 32; // Direction pin 1
+int motorPinIN2 = 33; // Direction pin 2
 
 int upButton = 16;
 int downButton = 17;
@@ -48,6 +51,9 @@ void setup()
   pinMode(motorPinEN, OUTPUT);  // Set the PWM pin as output
   pinMode(motorPinIN1, OUTPUT); // Set the direction pin 1 as output
   pinMode(motorPinIN2, OUTPUT); // Set the direction pin 2 as output
+  pinMode(fanPinEN, OUTPUT);  // Set the PWM pin as output
+  pinMode(fanPinIN1, OUTPUT); // Set the direction pin 1 as output
+  pinMode(fanPinIN2, OUTPUT); // Set the direction pin 2 as output
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Wi-Fi Bağlanıyor");
   while (WiFi.status() != WL_CONNECTED) {
@@ -74,27 +80,56 @@ void setup()
 
 void loop() 
 {
-  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) {
+
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
+  {
     sendDataPrevMillis = millis();
-    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) {
+    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
+    {
        int motorStatus = fbdo.intData();
          Serial.println(motorStatus);
-      if (motorStatus == 1) {
+      if (motorStatus == 1) 
+      {
         digitalWrite(motorPinIN1, HIGH);
         digitalWrite(motorPinIN2, LOW);
-        analogWrite(motorPinEN, 255); // Motoru çalıştır
+        analogWrite(motorPinEN, 100); // Motoru çalıştır
         Serial.println("Motor Çalışıyor");
-      } else {
+      } 
+      else 
+      {
         digitalWrite(motorPinIN1, LOW);
         digitalWrite(motorPinIN2, LOW);
         analogWrite(motorPinEN, 0); // Motoru durdur
         Serial.println("Motor Durdu!!!");
+      }
+    } 
+    else 
+    {
+      Serial.print("Hata: ");
+      Serial.println(fbdo.errorReason());
+    }
+    
+    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) {
+       int fanStatus = fbdo.intData();
+         Serial.println(fanStatus);
+      if (fanStatus == 1) {
+        digitalWrite(fanPinIN1, HIGH);
+        digitalWrite(fanPinIN2, LOW);
+        analogWrite(fanPinEN, 255);
+        Serial.println("Fan Çalışıyor");
+      } else {
+        digitalWrite(fanPinIN1, LOW);
+        digitalWrite(fanPinIN2, LOW);
+        analogWrite(fanPinEN, 0);
+        Serial.println("Fan Durdu!!!");
       }
     } else {
       Serial.print("Hata: ");
       Serial.println(fbdo.errorReason());
     }
   }
+
+
   if (!digitalRead(downButton))
   {
     menu++;
