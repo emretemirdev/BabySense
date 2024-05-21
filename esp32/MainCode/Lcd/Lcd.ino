@@ -10,6 +10,11 @@
 
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
+#include <DHT.h>
+
+
+#define DHTPIN 2         // DHT11 sensörünün veri pini
+#define DHTTYPE DHT11     // Sensör tipi
 
 #define WIFI_SSID "İlkcan53"
 #define WIFI_PASSWORD "ilkcan5353"
@@ -17,12 +22,17 @@
 #define DATABASE_URL "https://babymonitorwithesp32-default-rtdb.europe-west1.firebasedatabase.app" 
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+DHT dht(2, DHT11);
+
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 bool signupOK = false;
- 
+const long interval = 5000;  // Verileri her 5 saniyede bir gönder
+unsigned long lastSendTime = 0;
+
+///PİNLER  
 int fanPinEN = 5;  // PWM 
 int fanPinIN1 = 16; // Direction pin 1
 int fanPinIN2 = 17; // Direction pin 2
@@ -31,10 +41,12 @@ int motorPinEN = 25;  // PWM
 int motorPinIN1 = 32; // Direction pin 1
 int motorPinIN2 = 33; // Direction pin 2
 
-int upButton = 16;
-int downButton = 17;
-int selectButton =18;
+int upButton = 27;
+int downButton = 14;
+int selectButton =12;9
 int menu = 1;
+
+int carbonSensorPin = 34;
 
 void setup() 
 {
@@ -46,20 +58,28 @@ void setup()
   pinMode(upButton, INPUT_PULLUP);
   pinMode(downButton, INPUT_PULLUP);
   pinMode(selectButton, INPUT_PULLUP);
+  dht.begin();
+
   updateMenu();
   Serial.begin(115200);
+
   pinMode(motorPinEN, OUTPUT);  // Set the PWM pin as output
   pinMode(motorPinIN1, OUTPUT); // Set the direction pin 1 as output
   pinMode(motorPinIN2, OUTPUT); // Set the direction pin 2 as output
   pinMode(fanPinEN, OUTPUT);  // Set the PWM pin as output
   pinMode(fanPinIN1, OUTPUT); // Set the direction pin 1 as output
   pinMode(fanPinIN2, OUTPUT); // Set the direction pin 2 as output
+  pinMode(DHTPIN,OUTPUT);
+  pinMode(carbonSensorPin, OUTPUT); //carbondioksit. sensor
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Wi-Fi Bağlanıyor");
+
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(300);
   }
+
   Serial.println();
   Serial.print("Bağlanılan IP: ");
   Serial.println(WiFi.localIP());
@@ -193,7 +213,23 @@ void action4() {
   delay(1500);
 }
 
+void action5() 
+{  
+  Serial.print("ACTİONA GİRDİM");
+  float humidity = dht.readHumidity();
+  float temperature = dht.readTemperature();
 
+  if (isnan(humidity) || isnan(temperature)) {
+    Serial.println("Sensörden veri okunamadı!");
+    return;
+  }
+
+  Serial.println("Nem Orani"); 
+  Firebase.RTDB.setInt(&fbdo, "/sensorESP32/nemOrani", humidity);     
+  Serial.println("Sıcaklık"); 
+  Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sicaklik", temperature);
+
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -203,6 +239,7 @@ void loop()
 
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
   {
+    action5();
     sendDataPrevMillis = millis();
     if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
     {
@@ -249,7 +286,23 @@ void loop()
     }
   }
 
-/*
+  if (millis() - lastSendTime > interval) {
+    int sensorValue = analogRead(carbonSensorPin);
+    Serial.println(sensorValue);
+
+    if (Firebase.ready() && auth.token.uid.c_str()) { // Kontrol edin ki oturum açılmış olsun
+      if (!Firebase.RTDB.setInt(&fbdo, "/sensorESP32/co2", sensorValue)) {
+        Serial.print("Firebase gönderim hatası: ");
+        Serial.println(fbdo.errorReason());
+      }
+    } else {
+      Serial.println("Firebase servisi veya oturum hazır değil.");
+    }
+
+    lastSendTime = millis();
+  }
+
+
   if (!digitalRead(downButton))
   {
     menu++;
@@ -271,5 +324,5 @@ void loop()
     delay(100);
     while (!digitalRead(selectButton));
   }
-*/
+
 }
