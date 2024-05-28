@@ -1,8 +1,11 @@
 package com.emretemir.babymonitorwithesp32
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.compose.runtime.*
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -33,9 +36,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState); //bu kod şu işe yarar: https://stackoverflow.com/questions/60361276/what-does-superoncreatebundlesavedinstancestate-do-in-android
         val startupManager = StartupManager(this)
         startupManager.setup()
-
+        createNotificationChannel()
         setContent {
             AppContent(auth)
+        }
+    }
+
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Baby Monitor Channel"
+            val descriptionText = "Channel for Baby Monitor Notifications"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel("BABY_MONITOR_CHANNEL", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
         }
     }
     @Composable

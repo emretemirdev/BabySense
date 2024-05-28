@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
@@ -55,7 +56,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 var signInAttempts = 0
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
@@ -71,7 +71,6 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
     var missingInfoMessage by remember { mutableStateOf<String?>(null) }
     val imagePainter: Painter = painterResource(id = R.drawable.back_img)
 
-
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = imagePainter,
@@ -80,166 +79,171 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        Card(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.25f))
-                .padding(25.dp)
-                .clip(RoundedCornerShape(16.dp)),
-            elevation = CardDefaults.cardElevation()
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .width(400.dp) // Kartın genişliğini belirleyin
+                    .padding(25.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                elevation = CardDefaults.cardElevation()
             ) {
-                if (!isSignIn) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
-                        value = firstName,
-                        onValueChange = { firstName = it },
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        label = { Text("Ad") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
-                        value = lastName,
-                        onValueChange = { lastName = it },
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        label = { Text("Soyad") }
-                    )
-
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                TextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
-                    visualTransformation = VisualTransformation.None
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    label = { Text("Şifre") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                            val icon = if (isPasswordVisible) Icons.Default.Lock else Icons.Default.Search
-                            Icon(imageVector = icon, contentDescription = "Şifre Görünürlüğünü Değiştir")
-                        }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    if (!isSignIn) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextField(
+                            value = firstName,
+                            onValueChange = { firstName = it },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            label = { Text("Ad") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextField(
+                            value = lastName,
+                            onValueChange = { lastName = it },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            label = { Text("Soyad") }
+                        )
                     }
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (myErrorMessage != null) {
-                    Text(
-                        text = myErrorMessage!!,
-                        color = Color.Blue,
-                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        label = { Text("Email") },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                        visualTransformation = VisualTransformation.None
                     )
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        label = { Text("Şifre") },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                val icon = if (isPasswordVisible) Icons.Default.Lock else Icons.Default.Search
+                                Icon(imageVector = icon, contentDescription = "Şifre Görünürlüğünü Değiştir")
+                            }
+                        }
+                    )
 
-                if (isLoading) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-                } else {
-                    Button(
-                        onClick = {
-                            if (email.isEmpty() || password.isEmpty()) {
-                                missingInfoMessage = "Lütfen E-posta ve Şifrenizi Girin."
-                            } else {
-                                isLoading = true
-                                if (isSignIn) {
-                                    signIn(
-                                        auth, email, password,
-                                        onSignedIn = { signedInUser ->
-                                            onSignedIn(signedInUser)
-                                            isLoading = false
-                                        },
-                                        onSignInError = { errorMessage ->
-                                            myErrorMessage = errorMessage
-                                            isLoading = false
-                                        }
-                                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (myErrorMessage != null) {
+                        Text(
+                            text = myErrorMessage!!,
+                            color = Color.Blue,
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (isLoading) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Button(
+                            onClick = {
+                                if (email.isEmpty() || password.isEmpty()) {
+                                    missingInfoMessage = "Lütfen E-posta ve Şifrenizi Girin."
                                 } else {
-                                    if (firstName.isEmpty() || lastName.isEmpty()) {
-                                        missingInfoMessage = "Lütfen tüm alanları doldurun."
-                                    } else {
-                                        signUp(
-                                            auth, email, password, firstName, lastName,
+                                    isLoading = true
+                                    if (isSignIn) {
+                                        signIn(
+                                            auth, email, password,
                                             onSignedIn = { signedInUser ->
                                                 onSignedIn(signedInUser)
                                                 isLoading = false
                                             },
-                                            onSignUpError = { errorMessage ->
+                                            onSignInError = { errorMessage ->
                                                 myErrorMessage = errorMessage
                                                 isLoading = false
                                             }
                                         )
+                                    } else {
+                                        if (firstName.isEmpty() || lastName.isEmpty()) {
+                                            missingInfoMessage = "Lütfen tüm alanları doldurun."
+                                        } else {
+                                            signUp(
+                                                auth, email, password, firstName, lastName,
+                                                onSignedIn = { signedInUser ->
+                                                    onSignedIn(signedInUser)
+                                                    isLoading = false
+                                                },
+                                                onSignUpError = { errorMessage ->
+                                                    myErrorMessage = errorMessage
+                                                    isLoading = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp)
-                            .padding(8.dp),
-                    ) {
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .padding(8.dp),
+                        ) {
+                            Text(
+                                text = if (isSignIn) "Giriş Yap" else "Kaydol",
+                                fontSize = 18.sp,
+                            )
+                        }
+                    }
+
+                    missingInfoMessage?.let {
                         Text(
-                            text = if (isSignIn) "Giriş Yap" else "Kaydol",
-                            fontSize = 18.sp,
+                            text = it,
+                            color = Color.Red,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
                         )
                     }
-                }
 
-                missingInfoMessage?.let {
-                    Text(
-                        text = it,
-                        color = Color.Red,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .padding(8.dp),
-                ) {
-                    ClickableText(
-                        text = AnnotatedString(buildAnnotatedString {
-                            withStyle(style = SpanStyle(color = Color.Blue)) {
-                                append(if (isSignIn) "Hesabınız yok mu? Kaydol" else "Zaten bir hesabınız var mı? Giriş yap")
-                            }
-                        }.toString()),
-                        onClick = {
-                            myErrorMessage = null
-                            email = ""
-                            password = ""
-                            isSignIn = !isSignIn
-                        },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                            .height(50.dp)
+                            .padding(8.dp),
+                    ) {
+                        ClickableText(
+                            text = AnnotatedString(buildAnnotatedString {
+                                withStyle(style = SpanStyle(color = Color.Blue)) {
+                                    append(if (isSignIn) "Hesabınız yok mu? Kaydol" else "Zaten bir hesabınız var mı? Giriş yap")
+                                }
+                            }.toString()),
+                            onClick = {
+                                myErrorMessage = null
+                                email = ""
+                                password = ""
+                                isSignIn = !isSignIn
+                            },
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 private fun signIn(
     auth: FirebaseAuth,
     email: String,
@@ -263,13 +267,13 @@ private fun signIn(
             }
         }
 }
+
 private fun signUp(
     auth: FirebaseAuth,
     email: String,
     password: String,
     firstName: String,
     lastName: String,
-
     onSignedIn: (FirebaseUser) -> Unit,
     onSignUpError: (String) -> Unit // Kayıt hatası için geri çağrı
 ) {
@@ -304,4 +308,3 @@ private fun signUp(
             }
         }
 }
-

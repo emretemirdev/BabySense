@@ -1,5 +1,5 @@
-
 package com.emretemir.babymonitorwithesp32.screens
+
 import VideoStreamScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -26,10 +27,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.emretemir.babymonitorwithesp32.User
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +36,7 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
     val navController = rememberNavController()
     // Kullanıcı profil bilgilerini saklamak için bir state
     val userProfile = remember { mutableStateOf<User?>(null) }
+    val database = remember { FirebaseDatabase.getInstance() }
 
     // Firestore'dan kullanıcı profilini çek
     LaunchedEffect(key1 = user) {
@@ -52,7 +52,6 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
         }
     }
 
-
     Scaffold(
         bottomBar = {
             BottomNavigation(
@@ -67,8 +66,8 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     onClick = { navController.navigate("home") }
                 )
                 BottomNavigationItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profil") },
-                    label = { Text("Profil") },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Profil") },
+                    label = { Text("Ayarlar") },
                     selected = currentRoute == "profile",
                     onClick = { navController.navigate("profile") }
                 )
@@ -78,10 +77,8 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     selected = currentRoute == "VideoStreamScreen",
                     onClick = { navController.navigate("VideoStreamScreen") }
                 )
-                // Diğer bottom navigation item'ları ekleyin...
             }
         }
-
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -91,18 +88,14 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 .fillMaxSize()
         ) {
             composable("home") {
-
-                    HomeScreen(userProfile.value,
-                        onSignOut) // Virgülden sonra
+                HomeScreen(userProfile.value, onSignOut)
             }
             composable("profile") {
-                ProfileScreen(userProfile.value)
+                ProfileScreen(userProfile = userProfile.value, database = database)
             }
             composable("VideoStreamScreen") {
                 VideoStreamScreen()
             }
-
         }
     }
 }
-

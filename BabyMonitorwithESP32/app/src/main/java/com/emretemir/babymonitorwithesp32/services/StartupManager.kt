@@ -35,7 +35,7 @@ class StartupManager(private val activity: ComponentActivity) {
     private fun subscribeToSensorUpdates() {
         FirebaseMessaging.getInstance().subscribeToTopic("sensorUpdates")
             .addOnCompleteListener { task ->
-                var msg = "Subscription successful LAN"
+                var msg = "Subscription successful"
                 if (!task.isSuccessful) {
                     msg = "Subscription failed"
                 }
