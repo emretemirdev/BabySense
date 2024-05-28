@@ -1,25 +1,25 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Arduino.h>
+#include <Firebase_ESP_Client.h>
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
+#include <DHT.h>
+#include <SoftwareSerial.h>
+#include <DFRobotDFPlayerMini.h>
 #if defined(ESP32)
   #include <WiFi.h>
 #elif defined(ESP8266)
   #include <ESP8266WiFi.h>
 #endif
-#include <Firebase_ESP_Client.h>
-
-#include "addons/TokenHelper.h"
-#include "addons/RTDBHelper.h"
-#include <DHT.h>
-
 
 #define DHTPIN 2         // DHT11 sensörünün veri pini
-#define DHTTYPE DHT11     // Sensör tipi
+#define DHTTYPE DHT11    // Sensör tipi
 
-#define WIFI_SSID "İlkcan53"
-#define WIFI_PASSWORD "ilkcan5353"
+#define WIFI_SSID "Redmi"
+#define WIFI_PASSWORD "aliemre44"
 #define API_KEY "AIzaSyDC1tdIUc93KMK5igXftqZFQnZLoZgJwKM"
-#define DATABASE_URL "https://babymonitorwithesp32-default-rtdb.europe-west1.firebasedatabase.app" 
+#define DATABASE_URL "https://babymonitorwithesp32-default-rtdb.europe-west1.firebasedatabase.app"
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 DHT dht(2, DHT11);
@@ -32,21 +32,28 @@ bool signupOK = false;
 const long interval = 5000;  // Verileri her 5 saniyede bir gönder
 unsigned long lastSendTime = 0;
 
-///PİNLER  
+/// PİNLER  
 int fanPinEN = 5;  // PWM 
-int fanPinIN1 = 16; // Direction pin 1
-int fanPinIN2 = 17; // Direction pin 2
+int fanPinIN1 = 17; // Direction pin 1
+int fanPinIN2 = 16; // Direction pin 2
 
 int motorPinEN = 25;  // PWM 
 int motorPinIN1 = 32; // Direction pin 1
 int motorPinIN2 = 33; // Direction pin 2
 
+const int RX_PIN = 18;  // ESP32'nin RX pini
+const int TX_PIN = 19;  // ESP32'nin TX pini
+
 int upButton = 27;
 int downButton = 14;
-int selectButton =12;9
+int selectButton = 12;
 int menu = 1;
 
 int carbonSensorPin = 34;
+int microphonePin = 35;
+
+SoftwareSerial mySoftwareSerial(RX_PIN, TX_PIN); // RX, TX
+DFRobotDFPlayerMini myDFPlayer;
 
 void setup() 
 {
@@ -59,9 +66,9 @@ void setup()
   pinMode(downButton, INPUT_PULLUP);
   pinMode(selectButton, INPUT_PULLUP);
   dht.begin();
-
   updateMenu();
   Serial.begin(115200);
+  mySoftwareSerial.begin(9600);
 
   pinMode(motorPinEN, OUTPUT);  // Set the PWM pin as output
   pinMode(motorPinIN1, OUTPUT); // Set the direction pin 1 as output
@@ -69,8 +76,11 @@ void setup()
   pinMode(fanPinEN, OUTPUT);  // Set the PWM pin as output
   pinMode(fanPinIN1, OUTPUT); // Set the direction pin 1 as output
   pinMode(fanPinIN2, OUTPUT); // Set the direction pin 2 as output
-  pinMode(DHTPIN,OUTPUT);
-  pinMode(carbonSensorPin, OUTPUT); //carbondioksit. sensor
+  pinMode(DHTPIN, OUTPUT);
+  pinMode(carbonSensorPin, OUTPUT); // karbondioksit sensor
+  pinMode(microphonePin, INPUT);
+  pinMode(RX_PIN, OUTPUT);
+  pinMode(TX_PIN, OUTPUT);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Wi-Fi Bağlanıyor");
@@ -89,13 +99,19 @@ void setup()
   if (Firebase.signUp(&config, &auth, "", "")) {
     Serial.println("ok");
     signupOK = true;
-  }
-  else {
+  } else {
     Serial.printf("%s\n", config.signer.signupError.message.c_str());
   }
   config.token_status_callback = tokenStatusCallback;
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
+  myDFPlayer.begin(mySoftwareSerial);
+  /*if (!myDFPlayer.begin(mySoftwareSerial)) {
+    Serial.println("DFPlayer Mini'ye baglanirken bir hata olustu. Modulu kontrol edin.");
+    while (true);
+  }*/
+  Serial.println("DFPlayer Mini baglandi.");
+  myDFPlayer.volume(25);
 }
 
 void updateMenu() {
@@ -119,13 +135,13 @@ void updateMenu() {
       lcd.clear();
       lcd.print(">Ort. degerleri");
       lcd.setCursor(0, 1);
-      lcd.print(" MenuItem4");
+      lcd.print(" Ninni On/Off");
       break;
     case 4:
       lcd.clear();
       lcd.print(" Ort. degerleri");
       lcd.setCursor(0, 1);
-      lcd.print(">MenuItem4");
+      lcd.print(">Ninni On/Off");
       break;
     case 5:
       menu = 4;
@@ -161,14 +177,15 @@ void action1()
       lcd.print("Oto sal. kapali");
       Firebase.RTDB.setInt(&fbdo, "/sensorESP32/motorControl", 0);
     } 
-      else 
-      {
-        lcd.print("  Oto sal. acik");
-        Firebase.RTDB.setInt(&fbdo, "/sensorESP32/motorControl", 1);
-      }
+    else 
+    {
+      lcd.print("  Oto sal. acik");
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/motorControl", 1);
+    }
   }
   delay(1500);
 }
+
 void action2() 
 {
   lcd.clear();
@@ -180,14 +197,15 @@ void action2()
       lcd.print("   Fan kapali");
       Firebase.RTDB.setInt(&fbdo, "/sensorESP32/fanControl", 0);
     } 
-      else 
-      {
-        lcd.print("    Fan acik");
-        Firebase.RTDB.setInt(&fbdo, "/sensorESP32/fanControl", 1);
-      }
+    else 
+    {
+      lcd.print("    Fan acik");
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/fanControl", 1);
+    }
   }
   delay(1500);
 }
+
 void action3() 
 {
   lcd.clear();
@@ -207,9 +225,24 @@ void action3()
   }
   delay(5000);
 }
-void action4() {
+
+void action4() 
+{
   lcd.clear();
-  lcd.print(">Executing #4");
+  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/sound")) 
+  {
+    int SoundStatus = fbdo.intData();
+    if (SoundStatus == 1) 
+    {
+      lcd.print("   Ninni kapali");
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sound", 0);
+    } 
+    else 
+    {
+      lcd.print("    Ninni acik");
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sound", 1);
+    }
+  }
   delay(1500);
 }
 
@@ -228,23 +261,72 @@ void action5()
   Firebase.RTDB.setInt(&fbdo, "/sensorESP32/nemOrani", humidity);     
   Serial.println("Sıcaklık"); 
   Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sicaklik", temperature);
-
 }
 
-///////////////////////////////////////////////////////////////////////////
+void checkSound() {
+  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/sound")) {
+    int soundStatus = fbdo.intData();
+    if (soundStatus == 1) {
+      myDFPlayer.play(1);
+      Serial.println("Müzik Çalıyor");
+    } else {
+      myDFPlayer.stop();
+      Serial.println("Müzik Durdu");
+    }
+  } else {
+    Serial.print("Ses kontrolü hatası: ");
+    Serial.println(fbdo.errorReason());
+  }
+}
 
+void checkMicrophone() {
+  static unsigned long lastCheckTime = 0;
+  static int soundCount = 0;
+  static unsigned long soundDetectedTime = 0;
+  static bool soundDetected = false;
+
+  if (millis() - lastCheckTime >= 1000) {
+    lastCheckTime = millis();
+    
+    int soundLevel = digitalRead(microphonePin);
+    if (soundLevel == HIGH) {
+      soundCount++;
+    }
+
+    if (soundCount > 6) {
+      if (!soundDetected) {
+        soundDetected = true;
+        soundDetectedTime = millis();
+        Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 1);
+        Serial.println("Mikrofon aktif");
+      }
+      soundCount = 0;  // Reset the count after detecting the sound
+    }
+
+    // Reset the sound count every 20 seconds
+    static unsigned long lastResetTime = 0;
+    if (millis() - lastResetTime >= 20000) {
+      lastResetTime = millis();
+      soundCount = 0;
+    }
+  }
+
+  if (soundDetected && (millis() - soundDetectedTime > 30000)) {
+    Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 0);
+    soundDetected = false;
+    Serial.println("Mikrofon pasif");
+  }
+}
 
 void loop() 
 {
-
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
   {
-    action5();
     sendDataPrevMillis = millis();
     if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
     {
-       int motorStatus = fbdo.intData();
-         Serial.println(motorStatus);
+      int motorStatus = fbdo.intData();
+      Serial.println(motorStatus);
       if (motorStatus == 1) 
       {
         digitalWrite(motorPinIN1, HIGH);
@@ -253,7 +335,7 @@ void loop()
         Serial.println("Motor Çalışıyor");
       } 
       else 
-      {
+      { 
         digitalWrite(motorPinIN1, LOW);
         digitalWrite(motorPinIN2, LOW);
         analogWrite(motorPinEN, 0); // Motoru durdur
@@ -267,8 +349,8 @@ void loop()
     }
     
     if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) {
-       int fanStatus = fbdo.intData();
-         Serial.println(fanStatus);
+      int fanStatus = fbdo.intData();
+      Serial.println(fanStatus);
       if (fanStatus == 1) {
         digitalWrite(fanPinIN1, HIGH);
         digitalWrite(fanPinIN2, LOW);
@@ -284,9 +366,10 @@ void loop()
       Serial.print("Hata: ");
       Serial.println(fbdo.errorReason());
     }
+    checkMicrophone();
   }
 
-  if (millis() - lastSendTime > interval) {
+  /*if (millis() - lastSendTime > interval) {
     int sensorValue = analogRead(carbonSensorPin);
     Serial.println(sensorValue);
 
@@ -300,10 +383,10 @@ void loop()
     }
 
     lastSendTime = millis();
-  }
+  }*/
 
 
-  if (!digitalRead(downButton))
+  /*if (!digitalRead(downButton))
   {
     menu++;
     updateMenu();
@@ -323,6 +406,5 @@ void loop()
     updateMenu();
     delay(100);
     while (!digitalRead(selectButton));
-  }
-
+  }*/
 }
