@@ -28,7 +28,7 @@ class MicrophoneListener(private val context: Context, private val database: Fir
                         delay(1 * 30 * 1000) // 1 dakika
                         database.getReference("sensorESP32/motorControl").setValue(0)
                         database.getReference("sensorESP32/sound").setValue(0)
-                        database.getReference("sensorESP32/mikrofon").setValue(0)
+                        database.getReference("sensorESP32/mikrofon").setValue(0) //yeni
                     }
                 }
             }
