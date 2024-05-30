@@ -76,7 +76,7 @@ void setup()
   pinMode(fanPinIN1, OUTPUT); // Set the direction pin 1 as output
   pinMode(fanPinIN2, OUTPUT); // Set the direction pin 2 as output
   pinMode(DHTPIN, OUTPUT);
-  pinMode(carbonSensorPin, OUTPUT); // karbondioksit sensor
+  pinMode(carbonSensorPin, INPUT); // karbondioksit sensor
   pinMode(microphonePin, INPUT);
   pinMode(RX_PIN, OUTPUT);
   pinMode(TX_PIN, OUTPUT);
@@ -250,14 +250,13 @@ void action4()
 
 void action5() 
 {  
-  Serial.print("ACTİONA GİRDİM");
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
 
-  /*if (isnan(humidity) || isnan(temperature)) {
+  if (isnan(humidity) || isnan(temperature)) {
     Serial.println("Sensörden veri okunamadı!");
     return;
-  }*/
+  }
 
   Serial.println("Nem Orani"); 
   Firebase.RTDB.setInt(&fbdo, "/sensorESP32/nemOrani", humidity);     
@@ -300,17 +299,17 @@ void checkMicrophone() {
     }
 
     // 20 saniye içinde 6'dan fazla 1 sinyali gelirse Firebase'deki mikrofon değişkenini 1 yap
-    if (soundCount > 6) {
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 1);
+    if (soundCount > 3) {
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/mikrofon", 1);
       Serial.println("Mikrofon aktif");
     } else {
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 0);
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/mikrofon", 0);
       Serial.println("Mikrofon pasif");
     }
 
     // 20 saniye sonunda sinyal sayısını sıfırla
     static unsigned long lastResetTime = 0;
-    if (millis() - lastResetTime >= 20000) {
+    if (millis() - lastResetTime >=10000) {
       lastResetTime = millis();
       soundCount = 0;
     }
