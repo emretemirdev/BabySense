@@ -7,6 +7,7 @@
 #include <DHT.h>
 #include <SoftwareSerial.h>
 #include <DFRobotDFPlayerMini.h>
+
 #if defined(ESP32)
   #include <WiFi.h>
 #elif defined(ESP8266)
@@ -22,7 +23,7 @@
 #define DATABASE_URL "https://babymonitorwithesp32-default-rtdb.europe-west1.firebasedatabase.app"
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-DHT dht(2, DHT11);
+DHT dht(DHTPIN, DHTTYPE);
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -75,8 +76,8 @@ void setup()
   pinMode(fanPinEN, OUTPUT);  // Set the PWM pin as output
   pinMode(fanPinIN1, OUTPUT); // Set the direction pin 1 as output
   pinMode(fanPinIN2, OUTPUT); // Set the direction pin 2 as output
-  pinMode(DHTPIN, OUTPUT);
-  pinMode(carbonSensorPin, INPUT); // karbondioksit sensor
+  pinMode(DHTPIN, INPUT); // DHT pinini input olarak ayarla
+  pinMode(carbonSensorPin, INPUT); // Karbondioksit sensör
   pinMode(microphonePin, INPUT);
   pinMode(RX_PIN, OUTPUT);
   pinMode(TX_PIN, OUTPUT);
@@ -255,13 +256,19 @@ void action5()
 
   if (isnan(humidity) || isnan(temperature)) {
     Serial.println("Sensörden veri okunamadı!");
+    lcd.clear();
+    lcd.print("DHT11 HATA");
+    delay(2000);
     return;
   }
 
-  Serial.println("Nem Orani"); 
-  Firebase.RTDB.setInt(&fbdo, "/sensorESP32/nemOrani", humidity);     
-  Serial.println("Sıcaklık"); 
-  Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sicaklik", temperature);
+  Serial.print("Nem Orani: "); 
+  Serial.println(humidity);
+  Serial.print("Sıcaklık: "); 
+  Serial.println(temperature); 
+
+  Firebase.RTDB.setFloat(&fbdo, "/sensorESP32/nemOrani", humidity);     
+  Firebase.RTDB.setFloat(&fbdo, "/sensorESP32/sicaklik", temperature);
 }
 
 int previousSoundStatus = -1; // Başlangıçta geçersiz bir değer
@@ -298,7 +305,7 @@ void checkMicrophone() {
       soundCount++;
     }
 
-    // 20 saniye içinde 6'dan fazla 1 sinyali gelirse Firebase'deki mikrofon değişkenini 1 yap
+    // 10 saniye içinde 3'dan fazla 1 sinyali gelirse Firebase'deki mikrofon değişkenini 1 yap
     if (soundCount > 3) {
       Firebase.RTDB.setInt(&fbdo, "/sensorESP32/mikrofon", 1);
       Serial.println("Mikrofon aktif");
@@ -386,7 +393,6 @@ void loop()
 
     lastSendTime = millis();
   }
-
 
   if (!digitalRead(downButton))
   {
