@@ -16,8 +16,8 @@
 #define DHTPIN 2         // DHT11 sensörünün veri pini
 #define DHTTYPE DHT11    // Sensör tipi
 
-#define WIFI_SSID "Redmi"
-#define WIFI_PASSWORD "aliemre44"
+#define WIFI_SSID "İlkcan53"
+#define WIFI_PASSWORD "ilkcan5353"
 #define API_KEY "AIzaSyDC1tdIUc93KMK5igXftqZFQnZLoZgJwKM"
 #define DATABASE_URL "https://babymonitorwithesp32-default-rtdb.europe-west1.firebasedatabase.app"
 
@@ -66,7 +66,6 @@ void setup()
   pinMode(downButton, INPUT_PULLUP);
   pinMode(selectButton, INPUT_PULLUP);
   dht.begin();
-  updateMenu();
   Serial.begin(115200);
   mySoftwareSerial.begin(9600);
 
@@ -84,12 +83,15 @@ void setup()
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Wi-Fi Bağlanıyor");
+  lcd.print("      Wi-Fi     ");
+  lcd.setCursor(0, 1);
+  lcd.print("  Baglaniyor... ");
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(300);
   }
-
+  updateMenu();
   Serial.println();
   Serial.print("Bağlanılan IP: ");
   Serial.println(WiFi.localIP());
@@ -252,10 +254,10 @@ void action5()
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
 
-  if (isnan(humidity) || isnan(temperature)) {
+  /*if (isnan(humidity) || isnan(temperature)) {
     Serial.println("Sensörden veri okunamadı!");
     return;
-  }
+  }*/
 
   Serial.println("Nem Orani"); 
   Firebase.RTDB.setInt(&fbdo, "/sensorESP32/nemOrani", humidity);     
@@ -263,15 +265,20 @@ void action5()
   Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sicaklik", temperature);
 }
 
+int previousSoundStatus = -1; // Başlangıçta geçersiz bir değer
+
 void checkSound() {
   if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/sound")) {
     int soundStatus = fbdo.intData();
-    if (soundStatus == 1) {
-      myDFPlayer.play(1);
-      Serial.println("Müzik Çalıyor");
-    } else {
-      myDFPlayer.stop();
-      Serial.println("Müzik Durdu");
+    if (soundStatus != previousSoundStatus) {
+      if (soundStatus == 1) {
+        myDFPlayer.play(1);
+        Serial.println("Müzik Çalıyor");
+      } else {
+        myDFPlayer.stop();
+        Serial.println("Müzik Durdu");
+      }
+      previousSoundStatus = soundStatus; // Önceki durumu güncelle
     }
   } else {
     Serial.print("Ses kontrolü hatası: ");
@@ -282,56 +289,51 @@ void checkSound() {
 void checkMicrophone() {
   static unsigned long lastCheckTime = 0;
   static int soundCount = 0;
-  static unsigned long soundDetectedTime = 0;
-  static bool soundDetected = false;
 
   if (millis() - lastCheckTime >= 1000) {
     lastCheckTime = millis();
     
     int soundLevel = digitalRead(microphonePin);
+    Serial.println(microphonePin);
     if (soundLevel == HIGH) {
       soundCount++;
     }
 
+    // 20 saniye içinde 6'dan fazla 1 sinyali gelirse Firebase'deki mikrofon değişkenini 1 yap
     if (soundCount > 6) {
-      if (!soundDetected) {
-        soundDetected = true;
-        soundDetectedTime = millis();
-        Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 1);
-        Serial.println("Mikrofon aktif");
-      }
-      soundCount = 0;  // Reset the count after detecting the sound
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 1);
+      Serial.println("Mikrofon aktif");
+    } else {
+      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 0);
+      Serial.println("Mikrofon pasif");
     }
 
-    // Reset the sound count every 20 seconds
+    // 20 saniye sonunda sinyal sayısını sıfırla
     static unsigned long lastResetTime = 0;
     if (millis() - lastResetTime >= 20000) {
       lastResetTime = millis();
       soundCount = 0;
     }
   }
-
-  if (soundDetected && (millis() - soundDetectedTime > 30000)) {
-    Firebase.RTDB.setInt(&fbdo, "/sensorESP32/microphone", 0);
-    soundDetected = false;
-    Serial.println("Mikrofon pasif");
-  }
 }
 
 void loop() 
-{
+{ 
+  checkMicrophone();
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
   {
+
     sendDataPrevMillis = millis();
+    action5();
     if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
     {
       int motorStatus = fbdo.intData();
-      Serial.println(motorStatus);
+      //Serial.println(motorStatus);
       if (motorStatus == 1) 
       {
         digitalWrite(motorPinIN1, HIGH);
         digitalWrite(motorPinIN2, LOW);
-        analogWrite(motorPinEN, 100); // Motoru çalıştır
+        analogWrite(motorPinEN, 255); // Motoru çalıştır
         Serial.println("Motor Çalışıyor");
       } 
       else 
@@ -350,7 +352,7 @@ void loop()
     
     if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) {
       int fanStatus = fbdo.intData();
-      Serial.println(fanStatus);
+      //Serial.println(fanStatus);
       if (fanStatus == 1) {
         digitalWrite(fanPinIN1, HIGH);
         digitalWrite(fanPinIN2, LOW);
@@ -367,9 +369,10 @@ void loop()
       Serial.println(fbdo.errorReason());
     }
     checkMicrophone();
+    checkSound();
   }
 
-  /*if (millis() - lastSendTime > interval) {
+  if (millis() - lastSendTime > interval) {
     int sensorValue = analogRead(carbonSensorPin);
     Serial.println(sensorValue);
 
@@ -383,10 +386,10 @@ void loop()
     }
 
     lastSendTime = millis();
-  }*/
+  }
 
 
-  /*if (!digitalRead(downButton))
+  if (!digitalRead(downButton))
   {
     menu++;
     updateMenu();
@@ -406,5 +409,5 @@ void loop()
     updateMenu();
     delay(100);
     while (!digitalRead(selectButton));
-  }*/
+  }
 }
