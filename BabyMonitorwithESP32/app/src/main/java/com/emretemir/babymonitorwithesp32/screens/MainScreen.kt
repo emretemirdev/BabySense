@@ -66,17 +66,18 @@ fun MainScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     onClick = { navController.navigate("home") }
                 )
                 BottomNavigationItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Profil") },
-                    label = { Text("Ayarlar") },
-                    selected = currentRoute == "profile",
-                    onClick = { navController.navigate("profile") }
-                )
-                BottomNavigationItem(
                     icon = { Icon(Icons.Default.Face, contentDescription = "Canlı") },
                     label = { Text("Canlı") },
                     selected = currentRoute == "VideoStreamScreen",
                     onClick = { navController.navigate("VideoStreamScreen") }
                 )
+                BottomNavigationItem(
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Profil") },
+                    label = { Text("Ayarlar") },
+                    selected = currentRoute == "profile",
+                    onClick = { navController.navigate("profile") }
+                )
+
             }
         }
     ) { paddingValues ->

@@ -45,9 +45,9 @@ class MainActivity : ComponentActivity() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Baby Monitor Channel"
-            val descriptionText = "Channel for Baby Monitor Notifications"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val name = "Baby Monitor Bildirim Kanalı"
+            val descriptionText = "Bebek ağlaması algılandığında bildirim gönderir."
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel("BABY_MONITOR_CHANNEL", name, importance).apply {
                 description = descriptionText
             }
@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
             notificationManager.createNotificationChannel(channel)
         }
     }
+
     @Composable
     fun AppContent(auth: FirebaseAuth) {
         var showSplashScreen by remember { mutableStateOf(true) }
