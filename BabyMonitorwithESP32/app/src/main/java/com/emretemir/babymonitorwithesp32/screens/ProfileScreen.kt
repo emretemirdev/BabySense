@@ -1,5 +1,6 @@
 package com.emretemir.babymonitorwithesp32.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,13 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emretemir.babymonitorwithesp32.FanControlListener
 import com.emretemir.babymonitorwithesp32.MicrophoneListener
 import com.emretemir.babymonitorwithesp32.R
 import com.emretemir.babymonitorwithesp32.User
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,19 +135,41 @@ fun NotificationSettingsDialog(onDismiss: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(userProfile: User?, database: FirebaseDatabase) {
     val auth: FirebaseAuth by remember { mutableStateOf(FirebaseAuth.getInstance()) }
     var showDialog by remember { mutableStateOf(false) }
     var dialogContent by remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
-    var microphoneListenerEnabled by remember { mutableStateOf(true) } // Varsayılan olarak true
+    var microphoneListenerEnabled by remember { mutableStateOf(true) }
+    var maxTemperature by remember { mutableStateOf(30.0) }
+    var maxCO2 by remember { mutableStateOf(1000) }
 
     val context = LocalContext.current
     val microphoneListener = remember { MicrophoneListener(context, database) }
+    val fanControlListener = remember { FanControlListener(context, database) }
 
+    val settingsRef = database.getReference("settings")
+
+    // Dinleyicinin durumunu Firebase'den okuma
     LaunchedEffect(Unit) {
-        if (microphoneListenerEnabled) {
-            microphoneListener.startListening()
+        withContext(Dispatchers.IO) {
+            settingsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    microphoneListenerEnabled = snapshot.child("microphoneListenerEnabled").getValue(Boolean::class.java) ?: true
+                    maxTemperature = snapshot.child("maxTemperature").getValue(Double::class.java) ?: 30.0
+                    maxCO2 = snapshot.child("maxCO2").getValue(Int::class.java) ?: 1000
+
+                    if (microphoneListenerEnabled) {
+                        microphoneListener.startListening()
+                    }
+                    fanControlListener.startListening()
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("ProfileScreen", "Settings read error: ${error.message}")
+                }
+            })
         }
     }
 
@@ -207,6 +233,7 @@ fun ProfileScreen(userProfile: User?, database: FirebaseDatabase) {
                                 checked = microphoneListenerEnabled,
                                 onCheckedChange = { enabled ->
                                     microphoneListenerEnabled = enabled
+                                    settingsRef.child("microphoneListenerEnabled").setValue(enabled)
                                     if (enabled) {
                                         microphoneListener.startListening()
                                     } else {
@@ -223,6 +250,42 @@ fun ProfileScreen(userProfile: User?, database: FirebaseDatabase) {
                 }
             }
 
+            SettingCard(
+                title = "Fan Kontrol Ayarları",
+                description = "Fan kontrol ayarlarını yapın",
+                icon = painterResource(id = R.drawable.ic_fan)
+            ) {
+                showDialog = true
+                dialogContent = {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Fan Kontrol Ayarları")
+                        TextField(
+                            value = maxTemperature.toString(),
+                            onValueChange = { value ->
+                                maxTemperature = value.toDoubleOrNull() ?: maxTemperature
+                            },
+                            label = { Text("Maksimum Isı") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextField(
+                            value = maxCO2.toString(),
+                            onValueChange = { value ->
+                                maxCO2 = value.toIntOrNull() ?: maxCO2
+                            },
+                            label = { Text("Maksimum CO2") }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            settingsRef.child("maxTemperature").setValue(maxTemperature)
+                            settingsRef.child("maxCO2").setValue(maxCO2)
+                            showDialog = false
+                        }) {
+                            Text("Kaydet")
+                        }
+                    }
+                }
+            }
+
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
@@ -234,7 +297,7 @@ fun ProfileScreen(userProfile: User?, database: FirebaseDatabase) {
                     }
                 )
             }
-        } ?: Text(text = "Profil bilgileri yüklenemedi.")
+        } ?: Text(text = "Ayarlar Yükleniyor. Lütfen Bekleyiniz")
     }
 }
 

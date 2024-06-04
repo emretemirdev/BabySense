@@ -17,20 +17,42 @@ class MicrophoneListener(private val context: Context, private val database: Fir
         valueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val microphoneValue = snapshot.getValue(Int::class.java) ?: return
-                if (microphoneValue == 1) {
-                    // Bebek ağlaması algılandı
-                    database.getReference("sensorESP32/motorControl").setValue(1)
-                    database.getReference("sensorESP32/sound").setValue(1)
-                    sendNotification("Bebek ağlaması algılandı", "Beşik sallanıyor ve ninni çalıyor.")
+                val listenerEnabledRef = database.getReference("settings/microphoneListenerEnabled")
 
-                    // 5 dakika sonra motorControl ve sound değerlerini 0 yap
-                    job = CoroutineScope(Dispatchers.IO).launch {
-                        delay(1 * 30 * 1000) // 1 dakika
-                        database.getReference("sensorESP32/motorControl").setValue(0)
-                        database.getReference("sensorESP32/sound").setValue(0)
-                        database.getReference("sensorESP32/mikrofon").setValue(0) //yeni
+                listenerEnabledRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(listenerSnapshot: DataSnapshot) {
+                        val listenerEnabled = listenerSnapshot.getValue(Boolean::class.java) ?: true
+
+                        if (microphoneValue == 1) {
+                            if (listenerEnabled) {
+                                // Bebek ağlaması algılandı ve dinleyici etkin
+                                database.getReference("sensorESP32/motorControl").setValue(1)
+                                database.getReference("sensorESP32/sound").setValue(1)
+                                sendNotification(
+                                    "Bebek ağlaması algılandı",
+                                    "Beşik 1 Dakikalığına sallanıyor ve ninni çalınıyor."
+                                )
+
+                                job = CoroutineScope(Dispatchers.IO).launch {
+                                    delay(1 * 30 * 1000) // 1 dakika
+                                    database.getReference("sensorESP32/motorControl").setValue(0)
+                                    database.getReference("sensorESP32/sound").setValue(0)
+                                    database.getReference("sensorESP32/mikrofon").setValue(0)
+                                }
+                            } else {
+                                // Bebek ağlaması algılandı fakat dinleyici etkin değil
+                                sendNotification(
+                                    "Bebek ağlaması algılandı",
+                                    "Beşik ve ninni çalınmadı çünkü dinleyici etkin değil."
+                                )
+                            }
+                        }
                     }
-                }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e("MicrophoneListener", "Listener okunurken hata error: ${error.message}")
+                    }
+                })
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -44,17 +66,19 @@ class MicrophoneListener(private val context: Context, private val database: Fir
         valueEventListener?.let {
             database.getReference("sensorESP32/mikrofon").removeEventListener(it)
         }
-        job?.cancel() // Gelecek iptali
+        job?.cancel()
     }
 
     private fun sendNotification(title: String, message: String) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, "BABY_MONITOR_CHANNEL")
-            .setSmallIcon(R.drawable.ic_notifications)
-            .setContentTitle(title)
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setSmallIcon(R.drawable.ic_notifications) // Bildirim ikonu
+            .setContentTitle(title) // Bildirim başlığı
+            .setContentText(message) // Bildirim içeriği
+            .setPriority(NotificationCompat.PRIORITY_MAX) // Bildirimin önceliği
             .build()
+
         notificationManager.notify(1, notification)
     }
 }

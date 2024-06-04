@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,12 +52,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emretemir.babymonitorwithesp32.R
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
+
 var signInAttempts = 0
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
@@ -69,6 +73,7 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
     var isPasswordVisible by remember { mutableStateOf(false) }
     var myErrorMessage by remember { mutableStateOf<String?>(null) }
     var missingInfoMessage by remember { mutableStateOf<String?>(null) }
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
     val imagePainter: Painter = painterResource(id = R.drawable.back_img)
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -103,14 +108,18 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                         TextField(
                             value = firstName,
                             onValueChange = { firstName = it },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
                             label = { Text("Ad") }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         TextField(
                             value = lastName,
                             onValueChange = { lastName = it },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
                             label = { Text("Soyad") }
                         )
                     }
@@ -119,7 +128,9 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                     TextField(
                         value = email,
                         onValueChange = { email = it },
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
                         label = { Text("Email") },
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
@@ -130,7 +141,9 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                     TextField(
                         value = password,
                         onValueChange = { password = it },
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
                         label = { Text("Şifre") },
                         leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -149,7 +162,9 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                         Text(
                             text = myErrorMessage!!,
                             color = Color.Blue,
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
                         )
                     }
 
@@ -217,31 +232,94 @@ fun AuthScreen(onSignedIn: (FirebaseUser) -> Unit) {
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(8.dp),
-                    ) {
-                        ClickableText(
-                            text = AnnotatedString(buildAnnotatedString {
-                                withStyle(style = SpanStyle(color = Color.Blue)) {
-                                    append(if (isSignIn) "Hesabınız yok mu? Kaydol" else "Zaten bir hesabınız var mı? Giriş yap")
-                                }
-                            }.toString()),
-                            onClick = {
-                                myErrorMessage = null
-                                email = ""
-                                password = ""
-                                isSignIn = !isSignIn
-                            },
-                            modifier = Modifier.align(Alignment.Center)
+                    ClickableText(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(color = Color.Blue)) {
+                                append(if (isSignIn) "Hesabınız yok mu? Kaydol" else "Zaten bir hesabınız var mı? Giriş yap")
+                            }
+                        },
+                        onClick = {
+                            myErrorMessage = null
+                            email = ""
+                            password = ""
+                            isSignIn = !isSignIn
+                        },
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ClickableText(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(color = Color.Blue)) {
+                                append("Şifrenizi mi unuttunuz?")
+                            }
+                        },
+                        onClick = {
+                            showForgotPasswordDialog = true
+                        },
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+                    if (showForgotPasswordDialog) {
+                        ForgotPasswordDialog(
+                            onDismiss = { showForgotPasswordDialog = false },
+                            onSendEmail = { email ->
+                                isLoading = true
+                                sendPasswordResetEmail(auth, email, onComplete = { isSuccess ->
+                                    isLoading = false
+                                    showForgotPasswordDialog = false
+                                    if (isSuccess) {
+                                        myErrorMessage = "Şifre sıfırlama e-postası gönderildi."
+                                    } else {
+                                        myErrorMessage = "Şifre sıfırlama e-postası gönderilemedi."
+                                    }
+                                })
+                            }
                         )
                     }
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ForgotPasswordDialog(onDismiss: () -> Unit, onSendEmail: (String) -> Unit) {
+    var email by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Şifre Sıfırlama") },
+        text = {
+            Column {
+                TextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (email.isNotEmpty()) {
+                        onSendEmail(email)
+                    }
+                }
+            ) {
+                Text("Gönder")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
 }
 
 private fun signIn(
@@ -306,5 +384,12 @@ private fun signUp(
                 val errorMessage = task.exception?.message ?: "Bir hata meydana geldi"
                 onSignUpError(errorMessage)
             }
+        }
+}
+
+private fun sendPasswordResetEmail(auth: FirebaseAuth, email: String, onComplete: (Boolean) -> Unit) {
+    auth.sendPasswordResetEmail(email)
+        .addOnCompleteListener { task ->
+            onComplete(task.isSuccessful)
         }
 }
