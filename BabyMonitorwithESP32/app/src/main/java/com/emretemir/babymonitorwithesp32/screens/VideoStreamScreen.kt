@@ -35,7 +35,7 @@ fun VideoStreamScreen() {
             }
         },
         update = { webView ->
-            webView.loadUrl("http://172.20.10.3:81/stream")
+            webView.loadUrl("http://172.20.10.3")
         }
     )
 }

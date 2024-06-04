@@ -14,8 +14,8 @@
   #include <ESP8266WiFi.h>
 #endif
 
-#define DHTPIN 2         // DHT11 sensörünün veri pini
-#define DHTTYPE DHT11    // Sensör tipi
+#define DHTPIN 23         // DHT11 sensörünün veri pini
+#define DHTTYPE DHT11     // Sensör tipi
 
 #define WIFI_SSID "İlkcan53"
 #define WIFI_PASSWORD "ilkcan5353"
@@ -33,7 +33,6 @@ bool signupOK = false;
 const long interval = 5000;  // Verileri her 5 saniyede bir gönder
 unsigned long lastSendTime = 0;
 
-/// PİNLER  
 int fanPinEN = 5;  // PWM 
 int fanPinIN1 = 17; // Direction pin 1
 int fanPinIN2 = 16; // Direction pin 2
@@ -52,242 +51,196 @@ int menu = 1;
 
 int carbonSensorPin = 34;
 int microphonePin = 35;
+int buzzerPin = 26;
 
-SoftwareSerial mySoftwareSerial(RX_PIN, TX_PIN); // RX, TX
+SoftwareSerial mySoftwareSerial(RX_PIN, TX_PIN);
 DFRobotDFPlayerMini myDFPlayer;
 
-void setup() 
-{
-  lcd.init();
-  lcd.backlight();
-  lcd.print("   Baby Sense");
-  delay(3000);
-  lcd.clear();
-  pinMode(upButton, INPUT_PULLUP);
-  pinMode(downButton, INPUT_PULLUP);
-  pinMode(selectButton, INPUT_PULLUP);
-  dht.begin();
-  Serial.begin(115200);
-  mySoftwareSerial.begin(9600);
-
-  pinMode(motorPinEN, OUTPUT);  // Set the PWM pin as output
-  pinMode(motorPinIN1, OUTPUT); // Set the direction pin 1 as output
-  pinMode(motorPinIN2, OUTPUT); // Set the direction pin 2 as output
-  pinMode(fanPinEN, OUTPUT);  // Set the PWM pin as output
-  pinMode(fanPinIN1, OUTPUT); // Set the direction pin 1 as output
-  pinMode(fanPinIN2, OUTPUT); // Set the direction pin 2 as output
-  pinMode(DHTPIN, INPUT); // DHT pinini input olarak ayarla
-  pinMode(carbonSensorPin, INPUT); // Karbondioksit sensör
-  pinMode(microphonePin, INPUT);
-  pinMode(RX_PIN, OUTPUT);
-  pinMode(TX_PIN, OUTPUT);
-
+void setupWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Wi-Fi Bağlanıyor");
   lcd.print("      Wi-Fi     ");
   lcd.setCursor(0, 1);
   lcd.print("  Baglaniyor... ");
 
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
     delay(300);
+    Serial.print(".");
   }
-  updateMenu();
   Serial.println();
   Serial.print("Bağlanılan IP: ");
   Serial.println(WiFi.localIP());
-  Serial.println();
+}
+
+void setupFirebase() {
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
+
   if (Firebase.signUp(&config, &auth, "", "")) {
-    Serial.println("ok");
     signupOK = true;
+    Serial.println("Firebase: Kayit basarili");
   } else {
-    Serial.printf("%s\n", config.signer.signupError.message.c_str());
+    Serial.printf("Firebase: Kayit basarisiz, %s\n", config.signer.signupError.message.c_str());
   }
   config.token_status_callback = tokenStatusCallback;
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
+}
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+  lcd.print("   Baby Sense");
+  delay(3000);
+  lcd.clear();
+
+  pinMode(upButton, INPUT_PULLUP);
+  pinMode(downButton, INPUT_PULLUP);
+  pinMode(selectButton, INPUT_PULLUP);
+
+  dht.begin();
+  Serial.begin(115200);
+  mySoftwareSerial.begin(9600);
+
+  pinMode(motorPinEN, OUTPUT);
+  pinMode(motorPinIN1, OUTPUT);
+  pinMode(motorPinIN2, OUTPUT);
+  pinMode(fanPinEN, OUTPUT);
+  pinMode(fanPinIN1, OUTPUT);
+  pinMode(fanPinIN2, OUTPUT);
+  pinMode(DHTPIN, INPUT);
+  pinMode(carbonSensorPin, INPUT);
+  pinMode(microphonePin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+
+  setupWiFi();
+  setupFirebase();
+
   myDFPlayer.begin(mySoftwareSerial);
-  /*if (!myDFPlayer.begin(mySoftwareSerial)) {
-    Serial.println("DFPlayer Mini'ye baglanirken bir hata olustu. Modulu kontrol edin.");
-    while (true);
-  }*/
-  Serial.println("DFPlayer Mini baglandi.");
   myDFPlayer.volume(25);
+  Serial.println("DFPlayer Mini baglandi.");
+
+  updateMenu();
 }
 
 void updateMenu() {
+  lcd.clear();
   switch (menu) {
-    case 0:
-      menu = 1;
-      break;
     case 1:
-      lcd.clear();
       lcd.print(">Oto sal. On/Off");
       lcd.setCursor(0, 1);
       lcd.print(" Fan On/Off");
       break;
     case 2:
-      lcd.clear();
       lcd.print(" Oto sal. On/Off");
       lcd.setCursor(0, 1);
       lcd.print(">Fan On/Off");
       break;
     case 3:
-      lcd.clear();
       lcd.print(">Ort. degerleri");
       lcd.setCursor(0, 1);
       lcd.print(" Ninni On/Off");
       break;
     case 4:
-      lcd.clear();
       lcd.print(" Ort. degerleri");
       lcd.setCursor(0, 1);
       lcd.print(">Ninni On/Off");
       break;
-    case 5:
-      menu = 4;
+    default:
+      menu = 1;
+      updateMenu();
       break;
   }
+  Serial.print("Menu guncellendi: ");
+  Serial.println(menu);
 }
 
-void executeAction() {
-  switch (menu) {
-    case 1:
-      action1();
-      break;
-    case 2:
-      action2();
-      break;
-    case 3:
-      action3();
-      break;
-    case 4:
-      action4();
-      break;
-  }
-}
-
-void action1() 
-{
+void toggleControl(const char* path, const char* onMsg, const char* offMsg) {
   lcd.clear();
-  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
-  {
-    int motorStatus = fbdo.intData();
-    if (motorStatus == 1) 
-    {
-      lcd.print("Oto sal. kapali");
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/motorControl", 0);
-    } 
-    else 
-    {
-      lcd.print("  Oto sal. acik");
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/motorControl", 1);
-    }
+  if (Firebase.RTDB.getInt(&fbdo, path)) {
+    int status = fbdo.intData();
+    lcd.print(status == 1 ? offMsg : onMsg);
+    Firebase.RTDB.setInt(&fbdo, path, status == 1 ? 0 : 1);
+    Serial.print(path);
+    Serial.print(" degistirildi: ");
+    Serial.println(status == 1 ? 0 : 1);
+  } else {
+    Serial.print("Firebase'den veri alinamadi: ");
+    Serial.println(path);
   }
   delay(1500);
 }
 
-void action2() 
-{
+void displaySensorValues() {
   lcd.clear();
-  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) 
-  {
-    int FanStatus = fbdo.intData();
-    if (FanStatus == 1) 
-    {
-      lcd.print("   Fan kapali");
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/fanControl", 0);
-    } 
-    else 
-    {
-      lcd.print("    Fan acik");
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/fanControl", 1);
-    }
-  }
-  delay(1500);
-}
-
-void action3() 
-{
-  lcd.clear();
-  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/isi")) 
-  {
-    int temp = fbdo.intData();
+  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/isi")) {
     lcd.print("Sicaklik: ");
-    lcd.print(temp);
+    lcd.print(fbdo.intData());
     lcd.print(" C");
-    lcd.setCursor(0,1);
+    lcd.setCursor(0, 1);
+    Serial.print("Sicaklik: ");
+    Serial.print(fbdo.intData());
+    Serial.println(" C");
   }
-  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/co2")) 
-  {
-    int quality = fbdo.intData();
+  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/co2")) {
     lcd.print("Co2: ");
-    lcd.print(quality);
+    lcd.print(fbdo.intData());
+    Serial.print("CO2: ");
+    Serial.println(fbdo.intData());
   }
   delay(5000);
 }
 
-void action4() 
-{
-  lcd.clear();
-  if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/sound")) 
-  {
-    int SoundStatus = fbdo.intData();
-    if (SoundStatus == 1) 
-    {
-      lcd.print("   Ninni kapali");
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sound", 0);
-    } 
-    else 
-    {
-      lcd.print("    Ninni acik");
-      Firebase.RTDB.setInt(&fbdo, "/sensorESP32/sound", 1);
-    }
+void handleMotorControl(int motorPinIN1, int motorPinIN2, int motorPinEN, const char* path) {
+  if (Firebase.RTDB.getInt(&fbdo, path)) {
+    int status = fbdo.intData();
+    digitalWrite(motorPinIN1, status == 1 ? HIGH : LOW);
+    digitalWrite(motorPinIN2, status == 1 ? LOW : LOW);
+    analogWrite(motorPinEN, status == 1 ? 155 : 0);
+    Serial.print(path);
+    Serial.print(" kontrol durumu: ");
+    Serial.println(status == 1 ? "ACIK" : "KAPALI");
+  } else {
+    Serial.print("Firebase'den veri alinamadi: ");
+    Serial.println(path);
   }
-  delay(1500);
 }
 
-void action5() 
-{  
+void readDHTSensor() {
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
 
   if (isnan(humidity) || isnan(temperature)) {
-    Serial.println("Sensörden veri okunamadı!");
+    Serial.println("DHT11: Sensorden veri okunamadi!");
     lcd.clear();
     lcd.print("DHT11 HATA");
     delay(2000);
     return;
   }
 
+  Firebase.RTDB.setFloat(&fbdo, "/sensorESP32/nemOrani", humidity);     
+  Firebase.RTDB.setFloat(&fbdo, "/sensorESP32/isi", temperature);
   Serial.print("Nem Orani: "); 
   Serial.println(humidity);
-  Serial.print("Sıcaklık: "); 
+  Serial.print("Sicaklik: "); 
   Serial.println(temperature); 
-
-  Firebase.RTDB.setFloat(&fbdo, "/sensorESP32/nemOrani", humidity);     
-  Firebase.RTDB.setFloat(&fbdo, "/sensorESP32/sicaklik", temperature);
 }
 
-int previousSoundStatus = -1; // Başlangıçta geçersiz bir değer
-
 void checkSound() {
+  static int previousSoundStatus = -1;
   if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/sound")) {
     int soundStatus = fbdo.intData();
     if (soundStatus != previousSoundStatus) {
       if (soundStatus == 1) {
         myDFPlayer.play(1);
-        Serial.println("Müzik Çalıyor");
+        Serial.println("Muzik caliyor");
       } else {
         myDFPlayer.stop();
-        Serial.println("Müzik Durdu");
+        Serial.println("Muzik durdu");
       }
-      previousSoundStatus = soundStatus; // Önceki durumu güncelle
+      previousSoundStatus = soundStatus;
     }
   } else {
-    Serial.print("Ses kontrolü hatası: ");
+    Serial.print("Ses kontrolu hatasi: ");
     Serial.println(fbdo.errorReason());
   }
 }
@@ -300,12 +253,10 @@ void checkMicrophone() {
     lastCheckTime = millis();
     
     int soundLevel = digitalRead(microphonePin);
-    Serial.println(microphonePin);
     if (soundLevel == HIGH) {
       soundCount++;
     }
 
-    // 10 saniye içinde 3'dan fazla 1 sinyali gelirse Firebase'deki mikrofon değişkenini 1 yap
     if (soundCount > 3) {
       Firebase.RTDB.setInt(&fbdo, "/sensorESP32/mikrofon", 1);
       Serial.println("Mikrofon aktif");
@@ -314,104 +265,96 @@ void checkMicrophone() {
       Serial.println("Mikrofon pasif");
     }
 
-    // 20 saniye sonunda sinyal sayısını sıfırla
     static unsigned long lastResetTime = 0;
-    if (millis() - lastResetTime >=10000) {
+    if (millis() - lastResetTime >= 10000) {
       lastResetTime = millis();
       soundCount = 0;
     }
   }
 }
 
-void loop() 
-{ 
-  checkMicrophone();
-  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) 
-  {
+void handleMenuSelection() {
+  switch (menu) {
+    case 1:
+      toggleControl("/sensorESP32/motorControl", "  Oto sal. acik", "Oto sal. kapali");
+      break;
+    case 2:
+      toggleControl("/sensorESP32/fanControl", "    Fan acik", "   Fan kapali");
+      break;
+    case 3:
+      displaySensorValues();
+      break;
+    case 4:
+      toggleControl("/sensorESP32/sound", "    Ninni acik", "   Ninni kapali");
+      break;
+  }
+  updateMenu();
+}
 
+void readCO2Sensor() {
+  const int numReadings = 10;
+  int readings[numReadings];
+  int total = 0;
+  int average = 0;
+
+  for (int i = 0; i < numReadings; i++) {
+    readings[i] = analogRead(carbonSensorPin);
+    total += readings[i];
+    delay(50);
+  }
+
+  average = total / numReadings;
+
+  if (Firebase.ready() && auth.token.uid.c_str()) {
+    if (!Firebase.RTDB.setInt(&fbdo, "/sensorESP32/co2", average)) {
+      Serial.print("Firebase gonderim hatasi: ");
+      Serial.println(fbdo.errorReason());
+    }
+  } else {
+    Serial.println("Firebase servisi veya oturum hazir degil.");
+  }
+
+  Serial.print("CO2 sensor degeri: ");
+  Serial.println(average);
+
+  if (average > 2000) { 
+    digitalWrite(buzzerPin, HIGH);
+    Serial.println("Buzzer acik");
+  } else {
+    digitalWrite(buzzerPin, LOW);
+    Serial.println("Buzzer kapali");
+  }
+}
+
+void loop() {
+  checkMicrophone();
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
-    action5();
-    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/motorControl")) 
-    {
-      int motorStatus = fbdo.intData();
-      //Serial.println(motorStatus);
-      if (motorStatus == 1) 
-      {
-        digitalWrite(motorPinIN1, HIGH);
-        digitalWrite(motorPinIN2, LOW);
-        analogWrite(motorPinEN, 255); // Motoru çalıştır
-        Serial.println("Motor Çalışıyor");
-      } 
-      else 
-      { 
-        digitalWrite(motorPinIN1, LOW);
-        digitalWrite(motorPinIN2, LOW);
-        analogWrite(motorPinEN, 0); // Motoru durdur
-        Serial.println("Motor Durdu!!!");
-      }
-    } 
-    else 
-    {
-      Serial.print("Hata: ");
-      Serial.println(fbdo.errorReason());
-    }
-    
-    if (Firebase.RTDB.getInt(&fbdo, "/sensorESP32/fanControl")) {
-      int fanStatus = fbdo.intData();
-      //Serial.println(fanStatus);
-      if (fanStatus == 1) {
-        digitalWrite(fanPinIN1, HIGH);
-        digitalWrite(fanPinIN2, LOW);
-        analogWrite(fanPinEN, 255);
-        Serial.println("Fan Çalışıyor");
-      } else {
-        digitalWrite(fanPinIN1, LOW);
-        digitalWrite(fanPinIN2, LOW);
-        analogWrite(fanPinEN, 0);
-        Serial.println("Fan Durdu!!!");
-      }
-    } else {
-      Serial.print("Hata: ");
-      Serial.println(fbdo.errorReason());
-    }
-    checkMicrophone();
+    readDHTSensor();
+    handleMotorControl(motorPinIN1, motorPinIN2, motorPinEN, "/sensorESP32/motorControl");
+    handleMotorControl(fanPinIN1, fanPinIN2, fanPinEN, "/sensorESP32/fanControl");
     checkSound();
   }
 
   if (millis() - lastSendTime > interval) {
-    int sensorValue = analogRead(carbonSensorPin);
-    Serial.println(sensorValue);
-
-    if (Firebase.ready() && auth.token.uid.c_str()) { // Kontrol edin ki oturum açılmış olsun
-      if (!Firebase.RTDB.setInt(&fbdo, "/sensorESP32/co2", sensorValue)) {
-        Serial.print("Firebase gönderim hatası: ");
-        Serial.println(fbdo.errorReason());
-      }
-    } else {
-      Serial.println("Firebase servisi veya oturum hazır değil.");
-    }
-
+    readCO2Sensor();
     lastSendTime = millis();
   }
 
-  if (!digitalRead(downButton))
-  {
+  if (!digitalRead(downButton)) {
     menu++;
     updateMenu();
     delay(100);
     while (!digitalRead(downButton));
   }
-  if (!digitalRead(upButton))
-  {
+  if (!digitalRead(upButton)) {
     menu--;
     updateMenu();
     delay(100);
     while(!digitalRead(upButton));
   }
-  if (!digitalRead(selectButton))
-  {
-    executeAction();
-    updateMenu();
+  if (!digitalRead(selectButton)) {
+    handleMenuSelection();
     delay(100);
     while (!digitalRead(selectButton));
   }
