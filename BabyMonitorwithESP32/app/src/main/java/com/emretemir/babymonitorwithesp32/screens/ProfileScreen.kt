@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emretemir.babymonitorwithesp32.FanControlListener
+import com.emretemir.babymonitorwithesp32.services.FanControlListener
 import com.emretemir.babymonitorwithesp32.MicrophoneListener
 import com.emretemir.babymonitorwithesp32.R
 import com.emretemir.babymonitorwithesp32.User
@@ -264,7 +264,7 @@ fun ProfileScreen(userProfile: User?, database: FirebaseDatabase) {
                             onValueChange = { value ->
                                 maxTemperature = value.toDoubleOrNull() ?: maxTemperature
                             },
-                            label = { Text("Maksimum Isı") }
+                            label = { Text("Maksimum Sıcaklık") }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         TextField(
