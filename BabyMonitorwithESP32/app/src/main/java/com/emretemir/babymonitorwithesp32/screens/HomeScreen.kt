@@ -176,7 +176,7 @@ fun TemperatureCard() {
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
+
             }
         }
         databaseReference.addValueEventListener(listener)
